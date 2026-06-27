@@ -1,0 +1,9 @@
+.DS_Store
+
+# 你不想上传的特定文件
+dist.png
+multi-target项目记录.md
+
+# 不想上传的整个文件夹
+MTD2025_data/
+ZINC_data/
