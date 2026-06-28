@@ -8,3 +8,4 @@ run_smiles_gen_pretrain.sh
 # 不想上传的整个文件夹
 MTD2025_data/
 ZINC_data/
+outputs/
