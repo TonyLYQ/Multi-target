@@ -9,4 +9,5 @@ run_smiles_gen_pretrain.sh
 MTD2025_data/
 ZINC_data/
 Papyrus_data/
+Multi_target_data/
 outputs/
