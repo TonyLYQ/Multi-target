@@ -6,7 +6,7 @@ data:
   has_header: true
   max_length: 128
   split_ratio: [0.8, 0.1, 0.1]
-  split_index_path: outputs/smiles_gen_pretrain_continue/splits/zinc_split_offsets.pt
+  split_index_path: outputs/smiles_gen_pretrain_resume/splits/zinc_split_offsets.pt
 
 tokenizer:
   pad_token: "[PAD]"
@@ -27,7 +27,7 @@ model:
   add_cross_attention: false
 
 training:
-  output_dir: outputs/smiles_gen_pretrain_continue
+  output_dir: outputs/smiles_gen_pretrain_resume
   per_device_train_batch_size: 128
   per_device_eval_batch_size: 256
   gradient_accumulation_steps: 1
