@@ -35,7 +35,7 @@ training:
   betas: [0.9, 0.95]
   eps: 1.0e-8
   weight_decay: 0.01
-  max_epochs: 20
+  max_epochs: 40
   warmup_ratio: 0.03
   max_grad_norm: 1.0
   mixed_precision: bf16
@@ -45,7 +45,7 @@ training:
   save_state_dict_only: true
 
 early_stopping:
-  patience: 7
+  patience: 10
   min_delta: 0.0
 
 generation:
