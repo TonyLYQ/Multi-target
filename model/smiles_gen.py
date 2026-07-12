@@ -164,13 +164,38 @@ def build_smiles_gpt2_config(
     return model_config.to_gpt2_config()
 
 
+class ProteinConditionedGPT2LMHeadModel(GPT2LMHeadModel):
+    """GPT-2 that keeps protein memory available throughout generation."""
+
+    def prepare_inputs_for_generation(
+        self,
+        input_ids: torch.LongTensor,
+        past_key_values=None,
+        inputs_embeds: torch.Tensor | None = None,
+        **kwargs,
+    ) -> dict[str, object]:
+        model_inputs = super().prepare_inputs_for_generation(
+            input_ids=input_ids,
+            past_key_values=past_key_values,
+            inputs_embeds=inputs_embeds,
+            **kwargs,
+        )
+        model_inputs["encoder_hidden_states"] = kwargs.get(
+            "encoder_hidden_states"
+        )
+        model_inputs["encoder_attention_mask"] = kwargs.get(
+            "encoder_attention_mask"
+        )
+        return model_inputs
+
+
 class SmilesGPT2Generator(nn.Module):
-    """GPT-2 decoder-only language model for unconditional SMILES generation."""
+    """GPT-2 SMILES generator with optional protein cross-attention."""
 
     def __init__(self, config: GPT2Config) -> None:
         super().__init__()
         self.config = config
-        self.gpt2 = GPT2LMHeadModel(config)
+        self.gpt2 = ProteinConditionedGPT2LMHeadModel(config)
 
     @classmethod
     def from_tokenizer(
@@ -200,6 +225,58 @@ class SmilesGPT2Generator(nn.Module):
         )
         return cls(config)
 
+    def _validate_conditioning(
+        self,
+        input_ids: torch.LongTensor,
+        encoder_hidden_states: torch.Tensor | None,
+        encoder_attention_mask: torch.Tensor | None,
+    ) -> torch.Tensor | None:
+        if encoder_hidden_states is None:
+            if encoder_attention_mask is not None:
+                raise ValueError(
+                    "encoder_attention_mask requires encoder_hidden_states"
+                )
+            return None
+
+        if not self.config.add_cross_attention:
+            raise ValueError(
+                "Protein conditioning requires add_cross_attention=True"
+            )
+        if encoder_hidden_states.ndim != 3:
+            raise ValueError(
+                "encoder_hidden_states must have shape [B, S, n_embd]"
+            )
+        if encoder_hidden_states.size(0) != input_ids.size(0):
+            raise ValueError(
+                "input_ids and encoder_hidden_states must have the same batch size"
+            )
+        if encoder_hidden_states.size(-1) != self.config.n_embd:
+            raise ValueError(
+                f"Expected encoder hidden dimension {self.config.n_embd}, "
+                f"got {encoder_hidden_states.size(-1)}"
+            )
+        if encoder_hidden_states.device != input_ids.device:
+            raise ValueError(
+                "input_ids and encoder_hidden_states must be on the same device"
+            )
+
+        expected_mask_shape = encoder_hidden_states.shape[:2]
+        if encoder_attention_mask is None:
+            return torch.ones(
+                expected_mask_shape,
+                device=encoder_hidden_states.device,
+                dtype=torch.bool,
+            )
+        if encoder_attention_mask.shape != expected_mask_shape:
+            raise ValueError(
+                "encoder_attention_mask must have shape [B, S] matching "
+                "encoder_hidden_states"
+            )
+        return encoder_attention_mask.to(
+            device=encoder_hidden_states.device,
+            dtype=torch.bool,
+        )
+
     def forward(
         self,
         input_ids: torch.LongTensor,
@@ -209,11 +286,12 @@ class SmilesGPT2Generator(nn.Module):
         encoder_attention_mask: torch.Tensor | None = None,
         **kwargs,
     ) -> CausalLMOutputWithCrossAttentions:
-        """Run causal language modeling.
-
-        encoder_hidden_states and encoder_attention_mask are reserved for a future
-        protein-conditioned model with cross-attention enabled in GPT2Config.
-        """
+        """Run unconditional or protein-conditioned causal language modeling."""
+        encoder_attention_mask = self._validate_conditioning(
+            input_ids,
+            encoder_hidden_states,
+            encoder_attention_mask,
+        )
         return self.gpt2(
             input_ids=input_ids,
             attention_mask=attention_mask,
@@ -233,11 +311,20 @@ class SmilesGPT2Generator(nn.Module):
         temperature: float = 1.0,
         top_k: int = 50,
         top_p: float = 0.95,
+        encoder_hidden_states: torch.Tensor | None = None,
+        encoder_attention_mask: torch.Tensor | None = None,
         **kwargs,
     ) -> torch.LongTensor:
+        encoder_attention_mask = self._validate_conditioning(
+            input_ids,
+            encoder_hidden_states,
+            encoder_attention_mask,
+        )
         return self.gpt2.generate(
             input_ids=input_ids,
             attention_mask=attention_mask,
+            encoder_hidden_states=encoder_hidden_states,
+            encoder_attention_mask=encoder_attention_mask,
             max_new_tokens=max_new_tokens,
             do_sample=do_sample,
             temperature=temperature,
