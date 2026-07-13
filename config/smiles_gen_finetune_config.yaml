@@ -1,0 +1,50 @@
+seed: 42
+
+data:
+  csv_path: Multi_target_data/multi_target_positive_test.csv
+  protein_dir: ESMC_data
+  vocab_path: null
+  max_length: null
+  split_ratio: [0.8, 0.1, 0.1]
+  split_index_path: null
+
+pretrained:
+  output_dir: outputs/smiles_gen_pretrain_dim_768
+  resolved_config: resolved_config.yaml
+  checkpoint: checkpoints/best_state_dict.pt
+
+target_encoder:
+  input_dim: 2560
+  hidden_dim: 768
+  protein_queries: 128
+  set_queries: 32
+  protein_layers: 4
+  set_layers: 4
+  num_heads: 12
+  ffn_dim: null
+  dropout: 0.1
+  layer_norm_epsilon: 1.0e-5
+
+training:
+  output_dir: outputs/smiles_gen_finetune
+  per_device_train_batch_size: 32
+  per_device_eval_batch_size: 32
+  gradient_accumulation_steps: 1
+  gpt_learning_rate: 1.0e-5
+  cross_attention_learning_rate: 1.0e-4
+  target_encoder_learning_rate: 1.0e-4
+  betas: [0.9, 0.95]
+  eps: 1.0e-8
+  weight_decay: 0.01
+  max_epochs: 100
+  warmup_ratio: 0.05
+  max_grad_norm: 1.0
+  mixed_precision: bf16
+  num_workers: 0
+  logging_steps: 1
+  checkpoint_steps: 25
+  save_state_dict_only: true
+
+early_stopping:
+  patience: 10
+  min_delta: 0.0

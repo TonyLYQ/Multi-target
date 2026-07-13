@@ -376,21 +376,12 @@ class TargetSetEncoder(nn.Module):
             mask[self.config.set_queries :, : self.config.set_queries] = True
         return mask
 
-    def forward(
+    def _encode_packed_target_sets(
         self,
-        target_sets: Sequence[Sequence[Any]],
+        protein_hidden_states: torch.Tensor,
+        protein_attention_mask: torch.BoolTensor,
+        target_counts_tensor: torch.LongTensor,
     ) -> TargetSetEncoderOutput:
-        residue_hidden_states, residue_attention_mask, target_counts = (
-            self._prepare_batch(target_sets)
-        )
-        protein_latents = self.protein_resampler(
-            residue_hidden_states,
-            residue_attention_mask,
-        )
-        protein_hidden_states, protein_attention_mask, target_counts_tensor = (
-            self._pack_target_sets(protein_latents, target_counts)
-        )
-
         batch_size = protein_hidden_states.size(0)
         summary_hidden_states = self.summary_queries.unsqueeze(0).expand(
             batch_size,
@@ -435,4 +426,97 @@ class TargetSetEncoder(nn.Module):
             protein_hidden_state=hidden_states[:, summary_end:],
             protein_attention_mask=protein_attention_mask,
             target_counts=target_counts_tensor,
+        )
+
+    def forward(
+        self,
+        target_sets: Sequence[Sequence[Any]],
+    ) -> TargetSetEncoderOutput:
+        residue_hidden_states, residue_attention_mask, target_counts = (
+            self._prepare_batch(target_sets)
+        )
+        protein_latents = self.protein_resampler(
+            residue_hidden_states,
+            residue_attention_mask,
+        )
+        protein_hidden_states, protein_attention_mask, target_counts_tensor = (
+            self._pack_target_sets(protein_latents, target_counts)
+        )
+        return self._encode_packed_target_sets(
+            protein_hidden_states,
+            protein_attention_mask,
+            target_counts_tensor,
+        )
+
+    def forward_unique(
+        self,
+        unique_protein_encodings: Sequence[Any],
+        sample_target_indices: Sequence[Sequence[int]],
+    ) -> TargetSetEncoderOutput:
+        """Encode each unique protein once and reuse its latents across samples.
+
+        sample_target_indices contains positions into unique_protein_encodings.
+        Repeated indices across samples reuse the same differentiable latent
+        tensor, so gradients from every occurrence accumulate at the resampler.
+        """
+        unique_protein_encodings = list(unique_protein_encodings)
+        if not unique_protein_encodings:
+            raise ValueError("unique_protein_encodings must not be empty")
+
+        residue_hidden_states, residue_attention_mask, _ = self._prepare_batch(
+            [[protein] for protein in unique_protein_encodings]
+        )
+        unique_protein_latents = self.protein_resampler(
+            residue_hidden_states,
+            residue_attention_mask,
+        )
+
+        sample_target_indices = list(sample_target_indices)
+        if not sample_target_indices:
+            raise ValueError("sample_target_indices must not be empty")
+
+        gathered_target_sets: list[torch.Tensor] = []
+        target_counts: list[int] = []
+        unique_count = len(unique_protein_encodings)
+        for sample_index, target_indices in enumerate(sample_target_indices):
+            target_indices = list(target_indices)
+            if not target_indices:
+                raise ValueError(
+                    f"sample_target_indices[{sample_index}] must not be empty"
+                )
+            if any(
+                isinstance(index, bool) or not isinstance(index, int)
+                for index in target_indices
+            ):
+                raise TypeError(
+                    f"sample_target_indices[{sample_index}] must contain integers"
+                )
+            if len(set(target_indices)) != len(target_indices):
+                raise ValueError(
+                    f"sample_target_indices[{sample_index}] contains duplicates"
+                )
+            if any(index < 0 or index >= unique_count for index in target_indices):
+                raise IndexError(
+                    f"sample_target_indices[{sample_index}] contains an "
+                    "out-of-range protein index"
+                )
+
+            index_tensor = torch.tensor(
+                target_indices,
+                device=self.device,
+                dtype=torch.long,
+            )
+            gathered_target_sets.append(
+                unique_protein_latents.index_select(0, index_tensor)
+            )
+            target_counts.append(len(target_indices))
+
+        gathered_protein_latents = torch.cat(gathered_target_sets, dim=0)
+        protein_hidden_states, protein_attention_mask, target_counts_tensor = (
+            self._pack_target_sets(gathered_protein_latents, target_counts)
+        )
+        return self._encode_packed_target_sets(
+            protein_hidden_states,
+            protein_attention_mask,
+            target_counts_tensor,
         )
