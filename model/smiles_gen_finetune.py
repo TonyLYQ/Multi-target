@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import copy
 import csv
+import hashlib
 import math
 import os
 import random
@@ -36,6 +37,7 @@ from utils.early_stopping import EarlyStopping
 
 @dataclass(frozen=True)
 class PositiveRecord:
+    source_row_number: int
     smiles: str
     target_ids: tuple[str, ...]
 
@@ -160,6 +162,7 @@ def read_positive_records(csv_path: Path) -> list[PositiveRecord]:
                 raise ValueError(f"Row {row_number}: smiles is empty")
             records.append(
                 PositiveRecord(
+                    source_row_number=row_number,
                     smiles=smiles,
                     target_ids=parse_target_ids(
                         row.get("target_ids"),
@@ -171,6 +174,28 @@ def read_positive_records(csv_path: Path) -> list[PositiveRecord]:
     if not records:
         raise ValueError(f"No data rows found in {csv_path}")
     return records
+
+
+def filter_records_with_available_proteins(
+    records: Sequence[PositiveRecord],
+    protein_dir: Path,
+) -> tuple[
+    list[PositiveRecord],
+    list[tuple[PositiveRecord, tuple[str, ...]]],
+]:
+    available_records: list[PositiveRecord] = []
+    skipped_records: list[tuple[PositiveRecord, tuple[str, ...]]] = []
+    for record in records:
+        missing_target_ids = tuple(
+            target_id
+            for target_id in record.target_ids
+            if not (protein_dir / f"{target_id}.npy").is_file()
+        )
+        if missing_target_ids:
+            skipped_records.append((record, missing_target_ids))
+        else:
+            available_records.append(record)
+    return available_records, skipped_records
 
 
 def validate_protein_files(
@@ -207,6 +232,18 @@ def validate_protein_files(
     return unique_target_ids
 
 
+def fingerprint_records(records: Sequence[PositiveRecord]) -> str:
+    digest = hashlib.sha256()
+    for record in records:
+        digest.update(str(record.source_row_number).encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(record.smiles.encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(",".join(record.target_ids).encode("utf-8"))
+        digest.update(b"\n")
+    return digest.hexdigest()
+
+
 def validate_split_ratio(split_ratio: Sequence[float]) -> tuple[float, float, float]:
     if len(split_ratio) != 3:
         raise ValueError("split_ratio must contain train, valid, and test ratios")
@@ -224,12 +261,33 @@ def build_or_load_splits(
     split_path: Path,
     csv_path: Path,
     record_count: int,
+    record_fingerprint: str,
     seed: int,
     split_ratio: tuple[float, float, float],
     distributed: bool,
     rank: int,
 ) -> dict[str, Any]:
-    if is_main_process(rank) and not split_path.exists():
+    expected_metadata = {
+        "csv_path": str(csv_path.resolve()),
+        "record_count": record_count,
+        "record_fingerprint": record_fingerprint,
+        "seed": seed,
+        "split_ratio": list(split_ratio),
+    }
+    should_build = False
+    if is_main_process(rank):
+        should_build = not split_path.exists()
+        if split_path.exists():
+            existing_splits = torch.load(split_path, map_location="cpu")
+            if existing_splits.get("metadata", {}) != expected_metadata:
+                print(
+                    f"Existing split does not match the currently available "
+                    f"data; rebuilding {split_path}.",
+                    flush=True,
+                )
+                should_build = True
+
+    if is_main_process(rank) and should_build:
         generator = torch.Generator()
         generator.manual_seed(seed)
         permutation = torch.randperm(record_count, generator=generator)
@@ -245,12 +303,7 @@ def build_or_load_splits(
             "train": permutation[:train_count].clone(),
             "valid": permutation[train_count : train_count + valid_count].clone(),
             "test": permutation[train_count + valid_count :].clone(),
-            "metadata": {
-                "csv_path": str(csv_path.resolve()),
-                "record_count": record_count,
-                "seed": seed,
-                "split_ratio": list(split_ratio),
-            },
+            "metadata": expected_metadata,
         }
         split_path.parent.mkdir(parents=True, exist_ok=True)
         torch.save(splits, split_path)
@@ -264,12 +317,6 @@ def build_or_load_splits(
     barrier(distributed)
     splits = torch.load(split_path, map_location="cpu")
     metadata = splits.get("metadata", {})
-    expected_metadata = {
-        "csv_path": str(csv_path.resolve()),
-        "record_count": record_count,
-        "seed": seed,
-        "split_ratio": list(split_ratio),
-    }
     if metadata != expected_metadata:
         raise ValueError(
             f"Existing split metadata does not match the current data: {split_path}"
@@ -950,6 +997,33 @@ def main() -> int:
             )
 
         records = read_positive_records(csv_path)
+        records, skipped_records = filter_records_with_available_proteins(
+            records,
+            protein_dir,
+        )
+        if is_main_process(rank):
+            for record, missing_target_ids in skipped_records:
+                missing_description = ", ".join(
+                    f"{target_id} ({protein_dir / f'{target_id}.npy'})"
+                    for target_id in missing_target_ids
+                )
+                print(
+                    f"Skipping CSV row {record.source_row_number}: "
+                    f"SMILES={record.smiles!r}; missing protein "
+                    f"encoding(s): {missing_description}",
+                    flush=True,
+                )
+            if skipped_records:
+                print(
+                    f"Skipped {len(skipped_records)} data row(s) with missing "
+                    f"protein encodings; retained {len(records)} row(s).",
+                    flush=True,
+                )
+        if not records:
+            raise ValueError(
+                "No usable data rows remain after removing records with missing "
+                "protein encodings"
+            )
         target_config = config.get("target_encoder", {})
         input_dim = int(target_config.get("input_dim", 2560))
         unique_target_ids = validate_protein_files(
@@ -964,6 +1038,7 @@ def main() -> int:
             split_path=split_path,
             csv_path=csv_path,
             record_count=len(records),
+            record_fingerprint=fingerprint_records(records),
             seed=seed,
             split_ratio=split_ratio,
             distributed=distributed,
