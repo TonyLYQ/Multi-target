@@ -1,7 +1,7 @@
 seed: 42
 
 data:
-  csv_path: Multi_target_data/multi_target_positive_test.csv
+  csv_path: finetuning_data/multi_target_positive_combinations_3.csv
   protein_dir: ESMC_data
   vocab_path: null
   max_length: null
@@ -27,8 +27,8 @@ target_encoder:
 
 training:
   output_dir: outputs/smiles_gen_finetune
-  per_device_train_batch_size: 32
-  per_device_eval_batch_size: 32
+  per_device_train_batch_size: 64
+  per_device_eval_batch_size: 64
   gradient_accumulation_steps: 1
   gpt_learning_rate: 1.0e-5
   cross_attention_learning_rate: 1.0e-4
