@@ -1,7 +1,7 @@
 seed: 42
 
 data:
-  csv_path: finetuning_data/multi_target_positive_combinations_3.csv
+  csv_path: finetuning_data/MTD_combined.csv
   protein_dir: ESMC_data
   vocab_path: null
   max_length: null
