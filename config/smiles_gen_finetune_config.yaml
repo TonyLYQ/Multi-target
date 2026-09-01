@@ -1,7 +1,7 @@
 seed: 42
 
 data:
-  csv_path: finetuning_data/MTD_combined.csv
+  csv_path: finetuning_data/MTD_combined_Rev_ErbA.csv
   protein_dir: ESMC_data
   vocab_path: null
   max_length: null
@@ -26,7 +26,7 @@ target_encoder:
   layer_norm_epsilon: 1.0e-5
 
 training:
-  output_dir: outputs/smiles_gen_finetune
+  output_dir: outputs/smiles_gen_finetune_MR
   per_device_train_batch_size: 64
   per_device_eval_batch_size: 64
   gradient_accumulation_steps: 1
