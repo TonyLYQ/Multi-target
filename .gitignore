@@ -15,4 +15,5 @@ ESMC_data/
 finetuning_data/
 SPRi/
 LaMGen/
-docking/
+docking_Rev_ErbA_100/
+docking_Rev_ErbA_250/
