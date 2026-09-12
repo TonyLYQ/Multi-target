@@ -13,8 +13,8 @@
       .transition-label { font: 600 15px Arial, Helvetica, sans-serif; fill: #475569; text-anchor: middle; }
       .background-dot { fill: #D9DEE5; }
       .prior-dot { fill: #91A4B8; }
-      .condition-dot { fill: #168FA3; }
-      .spri-dot { fill: #389765; }
+      .rich-condition-dot { fill: #7667B1; }
+      .sparse-condition-dot { fill: #168FA3; }
     </style>
 
     <marker id="arrowhead" markerWidth="11" markerHeight="11" refX="9" refY="5.5" orient="auto">
@@ -39,10 +39,6 @@
       <circle cx="150" cy="387" r="3.8"/><circle cx="182" cy="381" r="4.4"/><circle cx="216" cy="389" r="3.6"/><circle cx="250" cy="382" r="4.7"/><circle cx="284" cy="388" r="3.9"/>
     </g>
 
-    <g id="known-ligand-star">
-      <path d="M0,-14 L3.4,-4.7 L13.3,-4.3 L5.4,1.7 L8.2,11.3 L0,5.8 L-8.2,11.3 L-5.4,1.7 L-13.3,-4.3 L-3.4,-4.7 Z"
-            fill="#F28E2B" stroke="#FFFFFF" stroke-width="2" stroke-linejoin="round"/>
-    </g>
   </defs>
 
   <rect width="2180" height="620" fill="#FFFFFF"/>
@@ -63,14 +59,14 @@
       <use xlink:href="#chemical-space-cloud"/>
     </g>
     <g transform="translate(0 35)">
-      <path d="M43,213 C48,157 86,118 143,122 C191,126 204,171 196,221 C190,274 166,315 112,313 C62,309 35,267 43,213 Z"
-            fill="#40B7C4" fill-opacity="0.20" stroke="#168FA3" stroke-width="2.2"/>
-      <path d="M221,129 C247,93 316,91 358,119 C400,148 402,193 367,211 C329,229 265,203 233,175 C215,159 210,145 221,129 Z"
-            fill="#40B7C4" fill-opacity="0.20" stroke="#168FA3" stroke-width="2.2"/>
-      <path d="M234,263 C263,235 333,235 369,258 C405,282 388,326 350,343 C305,360 249,337 230,303 C221,287 222,275 234,263 Z"
-            fill="#40B7C4" fill-opacity="0.20" stroke="#168FA3" stroke-width="2.2"/>
+      <path d="M43,213 C40,176 63,134 102,122 C135,111 178,128 190,158 C202,188 193,218 201,244 C208,271 182,305 151,314 C113,325 69,303 50,270 C39,251 46,232 43,213 Z"
+            fill="#A89BD6" fill-opacity="0.22" stroke="#7667B1" stroke-width="2.2"/>
+      <path d="M220,129 C235,100 270,90 302,101 C328,90 367,111 384,139 C402,167 387,201 359,214 C332,226 306,211 279,209 C248,207 218,185 213,158 C211,145 214,137 220,129 Z"
+            fill="#A89BD6" fill-opacity="0.22" stroke="#7667B1" stroke-width="2.2"/>
+      <path d="M234,263 C254,241 283,235 307,244 C334,234 371,252 382,279 C393,307 371,340 340,346 C314,351 293,337 267,339 C241,341 218,311 223,286 C225,276 228,269 234,263 Z"
+            fill="#A89BD6" fill-opacity="0.22" stroke="#7667B1" stroke-width="2.2"/>
 
-      <g class="condition-dot">
+      <g class="rich-condition-dot">
         <circle cx="70" cy="144" r="5"/><circle cx="98" cy="137" r="5"/><circle cx="130" cy="147" r="5"/><circle cx="82" cy="162" r="5"/><circle cx="115" cy="171" r="5"/><circle cx="148" cy="164" r="5"/>
         <circle cx="52" cy="169" r="5"/><circle cx="66" cy="187" r="5"/><circle cx="98" cy="196" r="5"/><circle cx="128" cy="189" r="5"/><circle cx="160" cy="198" r="5"/><circle cx="40" cy="193" r="5"/>
         <circle cx="58" cy="211" r="5"/><circle cx="90" cy="220" r="5"/><circle cx="120" cy="213" r="5"/><circle cx="150" cy="222" r="5"/><circle cx="182" cy="215" r="5"/>
@@ -89,7 +85,7 @@
         <circle cx="248" cy="321" r="5"/><circle cx="280" cy="312" r="5"/><circle cx="312" cy="319" r="5"/><circle cx="344" cy="311" r="5"/><circle cx="268" cy="346" r="5"/><circle cx="300" cy="337" r="5"/><circle cx="332" cy="344" r="5"/>
 
         <!-- A few low-probability samples just beyond the contours. -->
-        <circle cx="100" cy="108" r="4.5"/><circle cx="205" cy="362" r="4.5"/><circle cx="400" cy="220" r="4.5"/><circle cx="388" cy="289" r="4.5"/>
+        <circle cx="100" cy="108" r="4.5"/><circle cx="400" cy="220" r="4.5"/><circle cx="388" cy="289" r="4.5"/>
       </g>
     </g>
     <text class="caption" x="210" y="500">Data-rich condition enables broad exploration</text>
@@ -102,15 +98,11 @@
       <use xlink:href="#chemical-space-cloud"/>
     </g>
     <g transform="translate(0 35)">
-      <path d="M178,213 C188,195 218,193 239,204 C259,216 260,245 245,264 C231,281 201,282 184,266 C168,251 167,230 178,213 Z"
+      <path d="M196,228 C204,216 224,214 237,222 C248,230 246,248 236,257 C225,266 205,261 197,251 C190,244 190,236 196,228 Z"
             fill="#40B7C4" fill-opacity="0.20" stroke="#168FA3" stroke-width="2.2"/>
-      <g class="condition-dot">
-        <circle cx="195" cy="191" r="5"/><circle cx="228" cy="199" r="5"/><circle cx="182" cy="215" r="5"/>
-        <circle cx="214" cy="223" r="5"/><circle cx="245" cy="214" r="5"/><circle cx="177" cy="240" r="5"/>
-        <circle cx="208" cy="248" r="5"/><circle cx="240" cy="239" r="5"/><circle cx="188" cy="264" r="5"/>
-        <circle cx="220" cy="271" r="5"/><circle cx="252" cy="262" r="5"/>
+      <g class="sparse-condition-dot">
+        <circle cx="214" cy="223" r="5"/><circle cx="208" cy="248" r="5"/><circle cx="240" cy="239" r="5"/>
       </g>
-      <use xlink:href="#known-ligand-star" x="214" y="238"/>
     </g>
     <text class="caption" x="210" y="500">Sparse condition restricts local exploration</text>
   </g>
@@ -128,40 +120,27 @@
       <use xlink:href="#chemical-space-cloud"/>
     </g>
     <g transform="translate(0 35)">
-      <path d="M38,213 C45,145 93,111 151,122 C202,132 206,181 196,235 C186,294 151,327 95,316 C48,306 28,263 38,213 Z"
-            fill="#68B98A" fill-opacity="0.21" stroke="#389765" stroke-width="2.2"/>
-      <path d="M226,124 C257,89 329,94 370,124 C407,152 402,198 366,216 C324,237 267,205 235,177 C217,160 213,141 226,124 Z"
-            fill="#68B98A" fill-opacity="0.21" stroke="#389765" stroke-width="2.2"/>
-      <path d="M235,262 C267,231 337,238 373,265 C405,289 385,331 347,346 C302,362 249,338 231,304 C222,287 223,275 235,262 Z"
-            fill="#68B98A" fill-opacity="0.21" stroke="#389765" stroke-width="2.2"/>
+      <!-- Previous contour retained only as a hidden revision trace. -->
+      <path d="M286.4,90.3 L293.2,90.3 L299.9,90.8 L306.6,91.5 L313.3,92.6 L319.9,94.0 L326.4,95.8 L332.8,97.9 L339.1,100.4 L345.3,103.2 L351.3,106.3 L357.0,109.8 L362.6,113.7 L367.8,117.9 L372.8,122.5 L377.3,127.5 L381.5,132.9 L385.1,138.6 L388.0,144.7 L390.3,151.0 L391.7,157.6 L392.2,164.4 L391.7,171.1 L390.3,177.7 L388.2,184.1 L385.4,190.3 L382.1,196.2 L378.6,201.9 L375.0,207.7 L371.8,213.6 L369.5,220.0 L369.1,226.7 L370.7,233.2 L373.6,239.3 L377.1,245.1 L380.7,250.8 L384.3,256.6 L387.5,262.5 L390.4,268.6 L392.7,274.9 L394.3,281.5 L395.1,288.2 L395.2,295.0 L394.4,301.7 L392.9,308.2 L390.6,314.6 L387.6,320.7 L384.1,326.5 L380.1,331.9 L375.7,337.0 L370.8,341.7 L365.6,346.0 L360.2,350.0 L354.4,353.6 L348.5,356.8 L342.4,359.6 L336.1,362.1 L329.6,364.1 L323.1,365.8 L316.4,367.0 L309.7,367.9 L303.0,368.4 L296.2,368.4 L289.5,368.0 L282.8,367.2 L276.1,365.9 L269.6,364.2 L263.2,362.1 L256.9,359.6 L250.8,356.6 L244.9,353.3 L239.2,349.7 L233.7,345.9 L228.2,341.9 L222.8,337.8 L217.3,333.9 L211.8,330.1 L206.0,326.5 L200.0,323.4 L193.9,320.6 L187.5,318.3 L181.0,316.5 L174.4,315.1 L167.7,314.2 L160.9,313.7 L154.2,313.6 L147.4,313.8 L140.7,314.3 L134.0,315.0 L127.3,315.7 L120.5,316.5 L113.8,317.1 L107.1,317.5 L100.3,317.5 L93.6,317.0 L86.9,316.0 L80.3,314.4 L74.0,312.1 L67.9,309.1 L62.2,305.5 L56.9,301.3 L52.2,296.5 L47.9,291.3 L44.1,285.7 L40.8,279.8 L38.0,273.6 L35.7,267.3 L33.9,260.8 L32.5,254.2 L31.5,247.5 L31.0,240.7 L30.8,234.0 L31.0,227.2 L31.5,220.5 L32.5,213.8 L33.7,207.2 L35.3,200.6 L37.2,194.1 L39.5,187.7 L42.0,181.5 L44.9,175.4 L48.1,169.4 L51.6,163.6 L55.4,158.0 L59.5,152.7 L63.9,147.6 L68.6,142.7 L73.6,138.2 L78.9,133.9 L84.4,130.1 L90.2,126.6 L96.3,123.6 L102.5,121.0 L108.9,118.9 L115.5,117.3 L122.2,116.1 L128.9,115.5 L135.6,115.2 L142.4,115.4 L149.1,115.8 L155.9,116.4 L162.6,117.1 L169.3,117.7 L176.1,118.1 L182.8,118.2 L189.6,117.7 L196.2,116.5 L202.7,114.8 L209.1,112.5 L215.4,110.0 L221.5,107.2 L227.7,104.5 L233.9,101.8 L240.2,99.3 L246.6,97.1 L253.1,95.1 L259.6,93.5 L266.2,92.2 L272.9,91.2 L279.7,90.6 Z"
+            display="none"/>
+
+      <!-- Smooth support obtained from the 0.50 isocontour of four anisotropic
+           Gaussian kernels plus three low-weight bridge kernels. -->
+      <path d="M88.5,95.5 L95.1,95.2 L101.7,95.4 L108.2,96.1 L114.7,97.1 L121.2,98.6 L127.5,100.4 L133.8,102.5 L139.9,104.9 L145.9,107.6 L151.8,110.6 L157.5,113.9 L163.1,117.4 L168.5,121.2 L173.7,125.3 L178.7,129.5 L183.5,134.0 L188.1,138.7 L192.5,143.6 L196.7,148.7 L200.7,153.9 L204.6,159.3 L208.5,164.6 L212.5,169.8 L217.1,174.6 L222.3,178.6 L228.2,181.4 L234.6,183.1 L241.2,183.5 L247.7,182.7 L254.0,180.7 L260.0,177.9 L265.6,174.6 L271.2,171.0 L276.5,167.2 L281.9,163.3 L287.2,159.5 L292.6,155.6 L298.0,151.9 L303.6,148.4 L309.3,145.1 L315.2,142.1 L321.3,139.7 L327.7,137.8 L334.1,136.7 L340.7,136.5 L347.3,137.2 L353.6,138.9 L359.6,141.6 L365.1,145.3 L370.1,149.6 L374.4,154.6 L378.2,160.0 L381.3,165.8 L383.9,171.9 L386.0,178.1 L387.5,184.5 L388.7,191.0 L389.4,197.6 L389.7,204.1 L389.6,210.7 L389.1,217.3 L388.3,223.9 L387.1,230.3 L385.5,236.7 L383.7,243.1 L381.5,249.3 L378.9,255.4 L376.1,261.3 L372.9,267.1 L369.3,272.6 L365.4,277.9 L361.2,283.0 L356.6,287.7 L351.7,292.1 L346.4,296.1 L340.8,299.6 L334.9,302.5 L328.8,304.9 L322.4,306.7 L315.9,307.8 L309.4,308.2 L302.8,308.1 L296.2,307.6 L289.7,306.7 L283.2,305.6 L276.7,304.5 L270.1,303.6 L263.6,303.3 L257.0,303.8 L250.6,305.5 L244.7,308.4 L239.4,312.2 L234.5,316.6 L229.8,321.3 L225.2,326.0 L220.5,330.6 L215.7,335.2 L210.8,339.5 L205.7,343.7 L200.4,347.6 L194.9,351.3 L189.3,354.8 L183.5,358.0 L177.6,360.9 L171.6,363.6 L165.5,366.0 L159.3,368.2 L153.0,370.1 L146.6,371.8 L140.1,373.1 L133.6,374.2 L127.1,375.0 L120.5,375.5 L113.9,375.7 L107.3,375.5 L100.8,374.9 L94.2,373.9 L87.8,372.4 L81.6,370.3 L75.5,367.7 L69.9,364.3 L64.8,360.1 L60.7,354.9 L57.8,349.0 L56.5,342.6 L56.8,336.0 L58.4,329.6 L61.0,323.6 L64.4,317.9 L68.4,312.7 L72.7,307.7 L77.3,303.0 L82.2,298.6 L87.2,294.3 L92.4,290.2 L97.7,286.3 L103.1,282.4 L108.5,278.7 L114.0,275.0 L119.5,271.4 L125.0,267.8 L130.5,264.2 L135.9,260.4 L141.0,256.2 L145.5,251.4 L148.6,245.6 L149.9,239.2 L149.1,232.7 L146.3,226.8 L141.9,221.9 L136.7,217.8 L131.2,214.2 L125.5,210.8 L119.8,207.6 L114.1,204.3 L108.4,200.9 L102.8,197.5 L97.2,193.9 L91.7,190.3 L86.3,186.5 L81.0,182.6 L75.9,178.5 L70.9,174.2 L66.1,169.6 L61.7,164.8 L57.5,159.6 L53.9,154.2 L50.7,148.4 L48.3,142.2 L46.8,135.8 L46.4,129.2 L47.3,122.7 L49.7,116.6 L53.3,111.1 L57.9,106.4 L63.4,102.7 L69.3,99.8 L75.5,97.7 L82.0,96.3 Z"
+            fill="#40B7C4" fill-opacity="0.20" stroke="#168FA3" stroke-width="2.2" stroke-linejoin="round"/>
 
       <!-- Pre-SPRi conditional support retained as a dashed reference contour. -->
-      <path d="M178,213 C188,195 218,193 239,204 C259,216 260,245 245,264 C231,281 201,282 184,266 C168,251 167,230 178,213 Z"
+      <path d="M196,228 C204,216 224,214 237,222 C248,230 246,248 236,257 C225,266 205,261 197,251 C190,244 190,236 196,228 Z"
             fill="none" stroke="#168FA3" stroke-width="2.2" stroke-dasharray="7 6"/>
-      <g class="condition-dot">
-        <circle cx="195" cy="191" r="5"/><circle cx="228" cy="199" r="5"/><circle cx="182" cy="215" r="5"/>
-        <circle cx="245" cy="214" r="5"/><circle cx="177" cy="240" r="5"/><circle cx="240" cy="239" r="5"/>
-        <circle cx="188" cy="264" r="5"/><circle cx="220" cy="271" r="5"/><circle cx="252" cy="262" r="5"/>
-      </g>
-      <use xlink:href="#known-ligand-star" x="214" y="238"/>
-
-      <g class="spri-dot">
-        <circle cx="70" cy="144" r="5"/><circle cx="98" cy="137" r="5"/><circle cx="130" cy="147" r="5"/><circle cx="82" cy="162" r="5"/><circle cx="115" cy="171" r="5"/><circle cx="148" cy="164" r="5"/>
-        <circle cx="52" cy="169" r="5"/><circle cx="66" cy="187" r="5"/><circle cx="98" cy="196" r="5"/><circle cx="128" cy="189" r="5"/><circle cx="160" cy="198" r="5"/><circle cx="40" cy="193" r="5"/>
-        <circle cx="58" cy="211" r="5"/><circle cx="90" cy="220" r="5"/><circle cx="120" cy="213" r="5"/><circle cx="150" cy="222" r="5"/>
-        <circle cx="54" cy="236" r="5"/><circle cx="85" cy="245" r="5"/><circle cx="115" cy="238" r="5"/><circle cx="145" cy="247" r="5"/>
-        <circle cx="62" cy="261" r="5"/><circle cx="94" cy="270" r="5"/><circle cx="125" cy="263" r="5"/><circle cx="156" cy="272" r="5"/>
-        <circle cx="72" cy="286" r="5"/><circle cx="104" cy="295" r="5"/><circle cx="136" cy="288" r="5"/><circle cx="168" cy="297" r="5"/><circle cx="87" cy="311" r="5"/><circle cx="118" cy="320" r="5"/><circle cx="150" cy="313" r="5"/>
-
-        <circle cx="245" cy="93" r="5"/><circle cx="295" cy="106" r="5"/><circle cx="265" cy="121" r="5"/><circle cx="300" cy="126" r="5"/><circle cx="335" cy="119" r="5"/>
-        <circle cx="235" cy="141" r="5"/><circle cx="270" cy="146" r="5"/><circle cx="305" cy="138" r="5"/><circle cx="340" cy="145" r="5"/><circle cx="368" cy="139" r="5"/>
-        <circle cx="250" cy="172" r="5"/><circle cx="285" cy="163" r="5"/><circle cx="318" cy="170" r="5"/><circle cx="350" cy="165" r="5"/><circle cx="382" cy="174" r="5"/>
-        <circle cx="260" cy="190" r="5"/><circle cx="292" cy="197" r="5"/><circle cx="325" cy="188" r="5"/><circle cx="355" cy="195" r="5"/>
-
-        <circle cx="272" cy="246" r="5"/><circle cx="302" cy="237" r="5"/><circle cx="334" cy="244" r="5"/><circle cx="365" cy="238" r="5"/>
-        <circle cx="283" cy="269" r="5"/><circle cx="315" cy="261" r="5"/><circle cx="346" cy="270" r="5"/><circle cx="376" cy="263" r="5"/>
-        <circle cx="264" cy="287" r="5"/><circle cx="296" cy="294" r="5"/><circle cx="328" cy="286" r="5"/><circle cx="360" cy="295" r="5"/>
-        <circle cx="248" cy="321" r="5"/><circle cx="280" cy="312" r="5"/><circle cx="312" cy="319" r="5"/><circle cx="344" cy="311" r="5"/><circle cx="268" cy="346" r="5"/><circle cx="300" cy="337" r="5"/><circle cx="332" cy="344" r="5"/>
+      <g class="sparse-condition-dot">
+        <!-- Every shared-cloud point whose center satisfies the D support threshold. -->
+        <circle cx="130" cy="108" r="5"/><circle cx="100" cy="123" r="5"/><circle cx="125" cy="118" r="5"/><circle cx="160" cy="126" r="5"/><circle cx="70" cy="144" r="5"/><circle cx="98" cy="137" r="5"/><circle cx="130" cy="147" r="5"/><circle cx="165" cy="139" r="5"/><circle cx="340" cy="145" r="5"/><circle cx="82" cy="162" r="5"/>
+        <circle cx="115" cy="171" r="5"/><circle cx="148" cy="164" r="5"/><circle cx="180" cy="173" r="5"/><circle cx="285" cy="163" r="5"/><circle cx="318" cy="170" r="5"/><circle cx="350" cy="165" r="5"/><circle cx="382" cy="174" r="5"/><circle cx="128" cy="189" r="5"/><circle cx="160" cy="198" r="5"/><circle cx="195" cy="191" r="5"/>
+        <circle cx="228" cy="199" r="5"/><circle cx="260" cy="190" r="5"/><circle cx="292" cy="197" r="5"/><circle cx="325" cy="188" r="5"/><circle cx="355" cy="195" r="5"/><circle cx="150" cy="222" r="5"/><circle cx="182" cy="215" r="5"/><circle cx="214" cy="223" r="5"/><circle cx="245" cy="214" r="5"/><circle cx="278" cy="221" r="5"/>
+        <circle cx="310" cy="212" r="5"/><circle cx="342" cy="219" r="5"/><circle cx="372" cy="211" r="5"/><circle cx="177" cy="240" r="5"/><circle cx="208" cy="248" r="5"/><circle cx="240" cy="239" r="5"/><circle cx="272" cy="246" r="5"/><circle cx="302" cy="237" r="5"/><circle cx="334" cy="244" r="5"/><circle cx="365" cy="238" r="5"/>
+        <circle cx="156" cy="272" r="5"/><circle cx="188" cy="264" r="5"/><circle cx="220" cy="271" r="5"/><circle cx="252" cy="262" r="5"/><circle cx="283" cy="269" r="5"/><circle cx="315" cy="261" r="5"/><circle cx="346" cy="270" r="5"/><circle cx="104" cy="295" r="5"/><circle cx="136" cy="288" r="5"/><circle cx="168" cy="297" r="5"/>
+        <circle cx="200" cy="289" r="5"/><circle cx="232" cy="296" r="5"/><circle cx="264" cy="287" r="5"/><circle cx="296" cy="294" r="5"/><circle cx="328" cy="286" r="5"/><circle cx="87" cy="311" r="5"/><circle cx="118" cy="320" r="5"/><circle cx="150" cy="313" r="5"/><circle cx="183" cy="322" r="5"/><circle cx="216" cy="314" r="5"/>
+        <circle cx="75" cy="342" r="5"/><circle cx="105" cy="336" r="5"/><circle cx="138" cy="345" r="5"/><circle cx="170" cy="338" r="5"/><circle cx="105" cy="366" r="5"/><circle cx="137" cy="360" r="5"/>
       </g>
     </g>
     <text class="caption" x="210" y="500">SPRi enrichment restores conditional exploration</text>

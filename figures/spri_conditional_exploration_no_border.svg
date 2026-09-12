@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="2180" height="620" viewBox="0 0 2180 620"
+     role="img" aria-labelledby="figure-title figure-desc">
+  <title id="figure-title">SPRi-enabled expansion of target-conditioned chemical exploration</title>
+  <desc id="figure-desc">Four chemical-space panels use borderless density fields to compare a pretrained prior, data-rich and sparse target conditions, and SPRi-restored exploration.</desc>
+
+  <defs>
+    <style>
+      .panel-letter { font: 700 30px Arial, Helvetica, sans-serif; fill: #172033; }
+      .caption { font: 500 17px Arial, Helvetica, sans-serif; fill: #6B7280; text-anchor: middle; }
+      .transition-label { font: 600 15px Arial, Helvetica, sans-serif; fill: #475569; text-anchor: middle; }
+      .background-dot { fill: #D9DEE5; }
+      .prior-dot { fill: #91A4B8; }
+      .rich-condition-dot { fill: #7667B1; }
+      .sparse-condition-dot { fill: #168FA3; }
+    </style>
+
+    <marker id="arrowhead" markerWidth="11" markerHeight="11" refX="9" refY="5.5" orient="auto">
+      <path d="M0,0 L10,5.5 L0,11 Z" fill="#475569"/>
+    </marker>
+
+    <!-- Gaussian edge softening provides one continuous same-hue density field. -->
+    <filter id="soft-field" x="-22%" y="-22%" width="144%" height="144%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="8"/>
+    </filter>
+    <filter id="soft-field-small" x="-45%" y="-45%" width="190%" height="190%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="5"/>
+    </filter>
+
+    <radialGradient id="b1-density" gradientUnits="userSpaceOnUse" cx="112" cy="215" r="112">
+      <stop offset="0" stop-color="#7667B1" stop-opacity="0.28"/>
+      <stop offset="0.46" stop-color="#7667B1" stop-opacity="0.15"/>
+      <stop offset="1" stop-color="#7667B1" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="b2-density" gradientUnits="userSpaceOnUse" cx="310" cy="150" r="102">
+      <stop offset="0" stop-color="#7667B1" stop-opacity="0.24"/>
+      <stop offset="0.48" stop-color="#7667B1" stop-opacity="0.13"/>
+      <stop offset="1" stop-color="#7667B1" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="b3-density" gradientUnits="userSpaceOnUse" cx="306" cy="294" r="96">
+      <stop offset="0" stop-color="#7667B1" stop-opacity="0.31"/>
+      <stop offset="0.48" stop-color="#7667B1" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#7667B1" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="c-density" gradientUnits="userSpaceOnUse" cx="217" cy="238" r="31">
+      <stop offset="0" stop-color="#168FA3" stop-opacity="0.36"/>
+      <stop offset="0.48" stop-color="#168FA3" stop-opacity="0.19"/>
+      <stop offset="1" stop-color="#168FA3" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="d-hot-upper" gradientUnits="userSpaceOnUse" cx="120" cy="143" r="94">
+      <stop offset="0" stop-color="#168FA3" stop-opacity="0.25"/>
+      <stop offset="1" stop-color="#168FA3" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="d-hot-right" gradientUnits="userSpaceOnUse" cx="334" cy="221" r="100">
+      <stop offset="0" stop-color="#168FA3" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#168FA3" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="d-hot-lower" gradientUnits="userSpaceOnUse" cx="132" cy="330" r="98">
+      <stop offset="0" stop-color="#168FA3" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#168FA3" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- One deterministic point cloud reused in all four panels. -->
+    <g id="chemical-space-cloud">
+      <circle cx="175" cy="90" r="4.1"/><circle cx="210" cy="86" r="3.7"/><circle cx="245" cy="93" r="4.5"/>
+      <circle cx="130" cy="108" r="3.8"/><circle cx="155" cy="102" r="4.6"/><circle cx="190" cy="110" r="3.5"/><circle cx="225" cy="104" r="4.1"/><circle cx="260" cy="111" r="4.7"/><circle cx="295" cy="106" r="3.8"/>
+      <circle cx="100" cy="123" r="4.4"/><circle cx="125" cy="118" r="3.6"/><circle cx="160" cy="126" r="4.0"/><circle cx="195" cy="120" r="4.8"/><circle cx="230" cy="128" r="3.7"/><circle cx="265" cy="121" r="4.2"/><circle cx="300" cy="126" r="3.5"/><circle cx="335" cy="119" r="4.5"/>
+      <circle cx="70" cy="144" r="3.9"/><circle cx="98" cy="137" r="4.7"/><circle cx="130" cy="147" r="3.6"/><circle cx="165" cy="139" r="4.2"/><circle cx="198" cy="148" r="4.9"/><circle cx="235" cy="141" r="3.8"/><circle cx="270" cy="146" r="4.3"/><circle cx="305" cy="138" r="3.5"/><circle cx="340" cy="145" r="4.6"/><circle cx="368" cy="139" r="3.9"/>
+      <circle cx="52" cy="169" r="4.5"/><circle cx="82" cy="162" r="3.6"/><circle cx="115" cy="171" r="4.1"/><circle cx="148" cy="164" r="4.8"/><circle cx="180" cy="173" r="3.7"/><circle cx="215" cy="166" r="4.3"/><circle cx="250" cy="172" r="3.5"/><circle cx="285" cy="163" r="4.6"/><circle cx="318" cy="170" r="3.8"/><circle cx="350" cy="165" r="4.4"/><circle cx="382" cy="174" r="3.6"/>
+      <circle cx="40" cy="193" r="3.7"/><circle cx="66" cy="187" r="4.4"/><circle cx="98" cy="196" r="3.5"/><circle cx="128" cy="189" r="4.8"/><circle cx="160" cy="198" r="4.0"/><circle cx="195" cy="191" r="3.6"/><circle cx="228" cy="199" r="4.5"/><circle cx="260" cy="190" r="3.8"/><circle cx="292" cy="197" r="4.7"/><circle cx="325" cy="188" r="3.5"/><circle cx="355" cy="195" r="4.2"/><circle cx="390" cy="190" r="3.9"/>
+      <circle cx="30" cy="218" r="4.3"/><circle cx="58" cy="211" r="3.5"/><circle cx="90" cy="220" r="4.7"/><circle cx="120" cy="213" r="3.8"/><circle cx="150" cy="222" r="4.4"/><circle cx="182" cy="215" r="3.6"/><circle cx="214" cy="223" r="4.9"/><circle cx="245" cy="214" r="3.7"/><circle cx="278" cy="221" r="4.1"/><circle cx="310" cy="212" r="4.6"/><circle cx="342" cy="219" r="3.5"/><circle cx="372" cy="211" r="4.3"/><circle cx="400" cy="220" r="3.8"/>
+      <circle cx="25" cy="242" r="3.6"/><circle cx="54" cy="236" r="4.6"/><circle cx="85" cy="245" r="3.8"/><circle cx="115" cy="238" r="4.2"/><circle cx="145" cy="247" r="3.5"/><circle cx="177" cy="240" r="4.8"/><circle cx="208" cy="248" r="3.7"/><circle cx="240" cy="239" r="4.4"/><circle cx="272" cy="246" r="3.6"/><circle cx="302" cy="237" r="4.9"/><circle cx="334" cy="244" r="3.8"/><circle cx="365" cy="238" r="4.2"/><circle cx="395" cy="247" r="3.5"/>
+      <circle cx="30" cy="268" r="4.7"/><circle cx="62" cy="261" r="3.8"/><circle cx="94" cy="270" r="4.3"/><circle cx="125" cy="263" r="3.5"/><circle cx="156" cy="272" r="4.6"/><circle cx="188" cy="264" r="3.7"/><circle cx="220" cy="271" r="4.8"/><circle cx="252" cy="262" r="3.6"/><circle cx="283" cy="269" r="4.1"/><circle cx="315" cy="261" r="4.5"/><circle cx="346" cy="270" r="3.8"/><circle cx="376" cy="263" r="4.4"/><circle cx="400" cy="271" r="3.5"/>
+      <circle cx="42" cy="292" r="3.9"/><circle cx="72" cy="286" r="4.5"/><circle cx="104" cy="295" r="3.6"/><circle cx="136" cy="288" r="4.8"/><circle cx="168" cy="297" r="3.7"/><circle cx="200" cy="289" r="4.2"/><circle cx="232" cy="296" r="3.5"/><circle cx="264" cy="287" r="4.7"/><circle cx="296" cy="294" r="3.8"/><circle cx="328" cy="286" r="4.4"/><circle cx="360" cy="295" r="3.6"/><circle cx="388" cy="289" r="4.1"/>
+      <circle cx="55" cy="318" r="4.6"/><circle cx="87" cy="311" r="3.7"/><circle cx="118" cy="320" r="4.2"/><circle cx="150" cy="313" r="3.5"/><circle cx="183" cy="322" r="4.8"/><circle cx="216" cy="314" r="3.8"/><circle cx="248" cy="321" r="4.4"/><circle cx="280" cy="312" r="3.6"/><circle cx="312" cy="319" r="4.7"/><circle cx="344" cy="311" r="3.7"/><circle cx="375" cy="320" r="4.1"/>
+      <circle cx="75" cy="342" r="3.6"/><circle cx="105" cy="336" r="4.5"/><circle cx="138" cy="345" r="3.8"/><circle cx="170" cy="338" r="4.2"/><circle cx="202" cy="347" r="3.5"/><circle cx="235" cy="339" r="4.8"/><circle cx="268" cy="346" r="3.7"/><circle cx="300" cy="337" r="4.4"/><circle cx="332" cy="344" r="3.6"/><circle cx="360" cy="339" r="4.1"/>
+      <circle cx="105" cy="366" r="4.3"/><circle cx="137" cy="360" r="3.5"/><circle cx="170" cy="369" r="4.7"/><circle cx="205" cy="362" r="3.8"/><circle cx="240" cy="370" r="4.2"/><circle cx="273" cy="361" r="3.6"/><circle cx="306" cy="368" r="4.6"/><circle cx="338" cy="363" r="3.7"/>
+      <circle cx="150" cy="387" r="3.8"/><circle cx="182" cy="381" r="4.4"/><circle cx="216" cy="389" r="3.6"/><circle cx="250" cy="382" r="4.7"/><circle cx="284" cy="388" r="3.9"/>
+    </g>
+
+    <path id="b-support-1" d="M43,213 C40,176 63,134 102,122 C135,111 178,128 190,158 C202,188 193,218 201,244 C208,271 182,305 151,314 C113,325 69,303 50,270 C39,251 46,232 43,213 Z"/>
+    <path id="b-support-2" d="M220,129 C235,100 270,90 302,101 C328,90 367,111 384,139 C402,167 387,201 359,214 C332,226 306,211 279,209 C248,207 218,185 213,158 C211,145 214,137 220,129 Z"/>
+    <path id="b-support-3" d="M234,263 C254,241 283,235 307,244 C334,234 371,252 382,279 C393,307 371,340 340,346 C314,351 293,337 267,339 C241,341 218,311 223,286 C225,276 228,269 234,263 Z"/>
+    <path id="c-support" d="M196,228 C204,216 224,214 237,222 C248,230 246,248 236,257 C225,266 205,261 197,251 C190,244 190,236 196,228 Z"/>
+
+    <!-- D outer halo: 0.38 isocontour of the Gaussian-mixture field. -->
+    <path id="d-support-outer" d="M87.0,86.5 L95.3,86.5 L103.7,87.1 L111.9,88.3 L120.1,90.0 L128.1,92.3 L136.0,94.9 L143.7,98.1 L151.3,101.6 L158.6,105.6 L165.8,109.9 L172.7,114.6 L179.3,119.6 L185.7,125.0 L191.8,130.7 L197.7,136.6 L203.3,142.8 L208.7,149.1 L214.2,155.4 L219.9,161.5 L226.4,166.7 L233.9,170.2 L242.2,171.2 L250.4,169.8 L258.1,166.6 L265.3,162.5 L272.3,157.8 L279.0,152.8 L285.6,147.8 L292.3,142.8 L299.1,138.0 L306.1,133.5 L313.4,129.5 L321.1,126.1 L329.1,123.7 L337.3,122.4 L345.6,122.3 L353.8,123.7 L361.7,126.4 L369.0,130.5 L375.5,135.7 L381.2,141.8 L386.0,148.6 L390.1,155.9 L393.3,163.6 L395.9,171.5 L397.8,179.6 L399.1,187.8 L399.8,196.2 L400.0,204.5 L399.6,212.8 L398.8,221.1 L397.4,229.4 L395.6,237.5 L393.3,245.5 L390.6,253.4 L387.4,261.1 L383.7,268.6 L379.6,275.9 L375.0,282.8 L370.0,289.5 L364.5,295.7 L358.4,301.5 L352.0,306.7 L345.0,311.3 L337.6,315.2 L329.8,318.2 L321.8,320.3 L313.5,321.5 L305.2,321.9 L296.8,321.6 L288.5,320.8 L280.2,319.9 L271.9,319.4 L263.6,319.7 L255.4,321.4 L247.7,324.6 L240.6,328.9 L233.8,333.8 L227.2,338.9 L220.6,344.0 L213.9,348.9 L207.0,353.6 L199.9,358.1 L192.7,362.2 L185.3,366.0 L177.7,369.5 L169.9,372.6 L162.1,375.4 L154.1,377.8 L146.0,379.8 L137.8,381.4 L129.6,382.7 L121.3,383.5 L112.9,383.9 L104.6,383.9 L96.3,383.3 L88.0,382.1 L79.9,380.3 L71.9,377.7 L64.3,374.3 L57.3,369.9 L51.1,364.3 L46.3,357.5 L43.5,349.7 L42.8,341.4 L44.2,333.2 L47.3,325.4 L51.5,318.2 L56.5,311.5 L62.1,305.3 L68.1,299.5 L74.4,294.1 L80.9,288.9 L87.5,283.8 L94.3,279.0 L101.2,274.2 L108.0,269.5 L114.9,264.7 L121.6,259.8 L128.0,254.5 L133.5,248.2 L136.6,240.5 L135.3,232.4 L130.4,225.7 L124.0,220.3 L117.2,215.5 L110.2,211.1 L103.1,206.6 L96.0,202.2 L89.0,197.7 L82.1,193.0 L75.3,188.2 L68.7,183.1 L62.3,177.7 L56.3,171.9 L50.7,165.8 L45.6,159.2 L41.1,152.1 L37.6,144.6 L35.2,136.6 L34.2,128.3 L34.9,120.0 L37.6,112.2 L42.1,105.1 L48.0,99.3 L54.9,94.6 L62.5,91.2 L70.5,88.7 L78.7,87.2 Z"/>
+    <!-- D main support: 0.50 isocontour, area matched to panel B. -->
+    <path id="d-support-main" d="M88.5,95.5 L95.1,95.2 L101.7,95.4 L108.2,96.1 L114.7,97.1 L121.2,98.6 L127.5,100.4 L133.8,102.5 L139.9,104.9 L145.9,107.6 L151.8,110.6 L157.5,113.9 L163.1,117.4 L168.5,121.2 L173.7,125.3 L178.7,129.5 L183.5,134.0 L188.1,138.7 L192.5,143.6 L196.7,148.7 L200.7,153.9 L204.6,159.3 L208.5,164.6 L212.5,169.8 L217.1,174.6 L222.3,178.6 L228.2,181.4 L234.6,183.1 L241.2,183.5 L247.7,182.7 L254.0,180.7 L260.0,177.9 L265.6,174.6 L271.2,171.0 L276.5,167.2 L281.9,163.3 L287.2,159.5 L292.6,155.6 L298.0,151.9 L303.6,148.4 L309.3,145.1 L315.2,142.1 L321.3,139.7 L327.7,137.8 L334.1,136.7 L340.7,136.5 L347.3,137.2 L353.6,138.9 L359.6,141.6 L365.1,145.3 L370.1,149.6 L374.4,154.6 L378.2,160.0 L381.3,165.8 L383.9,171.9 L386.0,178.1 L387.5,184.5 L388.7,191.0 L389.4,197.6 L389.7,204.1 L389.6,210.7 L389.1,217.3 L388.3,223.9 L387.1,230.3 L385.5,236.7 L383.7,243.1 L381.5,249.3 L378.9,255.4 L376.1,261.3 L372.9,267.1 L369.3,272.6 L365.4,277.9 L361.2,283.0 L356.6,287.7 L351.7,292.1 L346.4,296.1 L340.8,299.6 L334.9,302.5 L328.8,304.9 L322.4,306.7 L315.9,307.8 L309.4,308.2 L302.8,308.1 L296.2,307.6 L289.7,306.7 L283.2,305.6 L276.7,304.5 L270.1,303.6 L263.6,303.3 L257.0,303.8 L250.6,305.5 L244.7,308.4 L239.4,312.2 L234.5,316.6 L229.8,321.3 L225.2,326.0 L220.5,330.6 L215.7,335.2 L210.8,339.5 L205.7,343.7 L200.4,347.6 L194.9,351.3 L189.3,354.8 L183.5,358.0 L177.6,360.9 L171.6,363.6 L165.5,366.0 L159.3,368.2 L153.0,370.1 L146.6,371.8 L140.1,373.1 L133.6,374.2 L127.1,375.0 L120.5,375.5 L113.9,375.7 L107.3,375.5 L100.8,374.9 L94.2,373.9 L87.8,372.4 L81.6,370.3 L75.5,367.7 L69.9,364.3 L64.8,360.1 L60.7,354.9 L57.8,349.0 L56.5,342.6 L56.8,336.0 L58.4,329.6 L61.0,323.6 L64.4,317.9 L68.4,312.7 L72.7,307.7 L77.3,303.0 L82.2,298.6 L87.2,294.3 L92.4,290.2 L97.7,286.3 L103.1,282.4 L108.5,278.7 L114.0,275.0 L119.5,271.4 L125.0,267.8 L130.5,264.2 L135.9,260.4 L141.0,256.2 L145.5,251.4 L148.6,245.6 L149.9,239.2 L149.1,232.7 L146.3,226.8 L141.9,221.9 L136.7,217.8 L131.2,214.2 L125.5,210.8 L119.8,207.6 L114.1,204.3 L108.4,200.9 L102.8,197.5 L97.2,193.9 L91.7,190.3 L86.3,186.5 L81.0,182.6 L75.9,178.5 L70.9,174.2 L66.1,169.6 L61.7,164.8 L57.5,159.6 L53.9,154.2 L50.7,148.4 L48.3,142.2 L46.8,135.8 L46.4,129.2 L47.3,122.7 L49.7,116.6 L53.3,111.1 L57.9,106.4 L63.4,102.7 L69.3,99.8 L75.5,97.7 L82.0,96.3 Z"/>
+
+  </defs>
+
+  <rect width="2180" height="620" fill="#FFFFFF"/>
+
+  <g id="panel-a" transform="translate(30 45)">
+    <text class="panel-letter" x="0" y="30">A</text>
+    <g transform="translate(0 35)" class="prior-dot" opacity="0.78"><use xlink:href="#chemical-space-cloud"/></g>
+    <text class="caption" x="210" y="500">Broad pretrained chemical prior</text>
+  </g>
+
+  <g id="panel-b" transform="translate(520 45)">
+    <text class="panel-letter" x="0" y="30">B</text>
+    <g transform="translate(0 35)" class="background-dot" opacity="0.68"><use xlink:href="#chemical-space-cloud"/></g>
+    <g transform="translate(0 35)">
+      <!-- Same-hue fields blur continuously beyond the analytical supports. -->
+      <use xlink:href="#b-support-1" fill="#7667B1" fill-opacity="0.17" filter="url(#soft-field)"/>
+      <use xlink:href="#b-support-2" fill="#7667B1" fill-opacity="0.17" filter="url(#soft-field)"/>
+      <use xlink:href="#b-support-3" fill="#7667B1" fill-opacity="0.17" filter="url(#soft-field)"/>
+      <ellipse cx="112" cy="215" rx="101" ry="113" fill="url(#b1-density)"/>
+      <ellipse cx="310" cy="150" rx="100" ry="73" fill="url(#b2-density)"/>
+      <ellipse cx="306" cy="294" rx="96" ry="70" fill="url(#b3-density)"/>
+      <g class="rich-condition-dot">
+        <circle cx="260" cy="111" r="4.7"/><circle cx="295" cy="106" r="3.8"/><circle cx="100" cy="123" r="4.4"/><circle cx="125" cy="118" r="3.6"/><circle cx="160" cy="126" r="4"/><circle cx="230" cy="128" r="3.7"/><circle cx="265" cy="121" r="4.2"/><circle cx="300" cy="126" r="3.5"/><circle cx="335" cy="119" r="4.5"/>
+        <circle cx="70" cy="144" r="3.9"/><circle cx="98" cy="137" r="4.7"/><circle cx="130" cy="147" r="3.6"/><circle cx="165" cy="139" r="4.2"/><circle cx="235" cy="141" r="3.8"/><circle cx="270" cy="146" r="4.3"/><circle cx="305" cy="138" r="3.5"/><circle cx="340" cy="145" r="4.6"/><circle cx="368" cy="139" r="3.9"/>
+        <circle cx="52" cy="169" r="4.5"/><circle cx="82" cy="162" r="3.6"/><circle cx="115" cy="171" r="4.1"/><circle cx="148" cy="164" r="4.8"/><circle cx="180" cy="173" r="3.7"/><circle cx="215" cy="166" r="4.3"/><circle cx="250" cy="172" r="3.5"/><circle cx="285" cy="163" r="4.6"/><circle cx="318" cy="170" r="3.8"/>
+        <circle cx="350" cy="165" r="4.4"/><circle cx="382" cy="174" r="3.6"/><circle cx="66" cy="187" r="4.4"/><circle cx="98" cy="196" r="3.5"/><circle cx="128" cy="189" r="4.8"/><circle cx="160" cy="198" r="4"/><circle cx="195" cy="191" r="3.6"/><circle cx="260" cy="190" r="3.8"/><circle cx="292" cy="197" r="4.7"/>
+        <circle cx="325" cy="188" r="3.5"/><circle cx="355" cy="195" r="4.2"/><circle cx="58" cy="211" r="3.5"/><circle cx="90" cy="220" r="4.7"/><circle cx="120" cy="213" r="3.8"/><circle cx="150" cy="222" r="4.4"/><circle cx="182" cy="215" r="3.6"/><circle cx="310" cy="212" r="4.6"/><circle cx="342" cy="219" r="3.5"/>
+        <circle cx="372" cy="211" r="4.3"/><circle cx="54" cy="236" r="4.6"/><circle cx="85" cy="245" r="3.8"/><circle cx="115" cy="238" r="4.2"/><circle cx="145" cy="247" r="3.5"/><circle cx="177" cy="240" r="4.8"/><circle cx="272" cy="246" r="3.6"/><circle cx="334" cy="244" r="3.8"/><circle cx="62" cy="261" r="3.8"/>
+        <circle cx="94" cy="270" r="4.3"/><circle cx="125" cy="263" r="3.5"/><circle cx="156" cy="272" r="4.6"/><circle cx="188" cy="264" r="3.7"/><circle cx="252" cy="262" r="3.6"/><circle cx="283" cy="269" r="4.1"/><circle cx="315" cy="261" r="4.5"/><circle cx="346" cy="270" r="3.8"/><circle cx="376" cy="263" r="4.4"/>
+        <circle cx="72" cy="286" r="4.5"/><circle cx="104" cy="295" r="3.6"/><circle cx="136" cy="288" r="4.8"/><circle cx="168" cy="297" r="3.7"/><circle cx="232" cy="296" r="3.5"/><circle cx="264" cy="287" r="4.7"/><circle cx="296" cy="294" r="3.8"/><circle cx="328" cy="286" r="4.4"/><circle cx="360" cy="295" r="3.6"/>
+        <circle cx="388" cy="289" r="4.1"/><circle cx="118" cy="320" r="4.2"/><circle cx="150" cy="313" r="3.5"/><circle cx="248" cy="321" r="4.4"/><circle cx="280" cy="312" r="3.6"/><circle cx="312" cy="319" r="4.7"/><circle cx="344" cy="311" r="3.7"/><circle cx="375" cy="320" r="4.1"/><circle cx="300" cy="337" r="4.4"/>
+        <circle cx="332" cy="344" r="3.6"/><circle cx="360" cy="339" r="4.1"/>
+        <!-- Low-probability samples outside the main analytical supports. -->
+        <circle cx="100" cy="108" r="4.5"/><circle cx="400" cy="220" r="4.5"/>
+      </g>
+    </g>
+    <text class="caption" x="210" y="500">Data-rich condition enables broad exploration</text>
+  </g>
+
+  <g id="panel-c" transform="translate(1010 45)">
+    <text class="panel-letter" x="0" y="30">C</text>
+    <g transform="translate(0 35)" class="background-dot" opacity="0.68"><use xlink:href="#chemical-space-cloud"/></g>
+    <g transform="translate(0 35)">
+      <use xlink:href="#c-support" fill="#168FA3" fill-opacity="0.20" filter="url(#soft-field-small)"/>
+      <ellipse cx="217" cy="238" rx="30" ry="25" fill="url(#c-density)"/>
+      <g class="sparse-condition-dot">
+        <circle cx="214" cy="223" r="4.9"/><circle cx="208" cy="248" r="3.7"/><circle cx="240" cy="239" r="4.4"/>
+      </g>
+    </g>
+    <text class="caption" x="210" y="500">Sparse condition restricts local exploration</text>
+  </g>
+
+  <!-- Reserved blank area for a user-supplied SPRi icon: x=1495..1665, y=115..225. -->
+  <g id="spri-transition">
+    <line x1="1468" y1="310" x2="1688" y2="310" stroke="#475569" stroke-width="2.5" marker-end="url(#arrowhead)"/>
+    <text class="transition-label" x="1578" y="344">+ SPRi binding data</text>
+  </g>
+
+  <g id="panel-d" transform="translate(1720 45)">
+    <text class="panel-letter" x="0" y="30">D</text>
+    <g transform="translate(0 35)" class="background-dot" opacity="0.68"><use xlink:href="#chemical-space-cloud"/></g>
+    <g transform="translate(0 35)">
+      <!-- One same-hue field with a continuous edge decay and unequal hotspots. -->
+      <use xlink:href="#d-support-main" fill="#168FA3" fill-opacity="0.17" filter="url(#soft-field)"/>
+      <ellipse cx="120" cy="143" rx="102" ry="84" fill="url(#d-hot-upper)"/>
+      <ellipse cx="334" cy="221" rx="92" ry="116" fill="url(#d-hot-right)"/>
+      <ellipse cx="132" cy="330" rx="112" ry="76" fill="url(#d-hot-lower)"/>
+      <g class="sparse-condition-dot">
+        <circle cx="130" cy="108" r="3.8"/><circle cx="100" cy="123" r="4.4"/><circle cx="125" cy="118" r="3.6"/><circle cx="160" cy="126" r="4"/><circle cx="70" cy="144" r="3.9"/><circle cx="98" cy="137" r="4.7"/><circle cx="130" cy="147" r="3.6"/><circle cx="165" cy="139" r="4.2"/><circle cx="198" cy="148" r="4.9"/>
+        <circle cx="340" cy="145" r="4.6"/><circle cx="82" cy="162" r="3.6"/><circle cx="115" cy="171" r="4.1"/><circle cx="148" cy="164" r="4.8"/><circle cx="180" cy="173" r="3.7"/><circle cx="215" cy="166" r="4.3"/><circle cx="285" cy="163" r="4.6"/><circle cx="318" cy="170" r="3.8"/><circle cx="350" cy="165" r="4.4"/>
+        <circle cx="382" cy="174" r="3.6"/><circle cx="98" cy="196" r="3.5"/><circle cx="128" cy="189" r="4.8"/><circle cx="160" cy="198" r="4"/><circle cx="195" cy="191" r="3.6"/><circle cx="228" cy="199" r="4.5"/><circle cx="260" cy="190" r="3.8"/><circle cx="292" cy="197" r="4.7"/><circle cx="325" cy="188" r="3.5"/>
+        <circle cx="355" cy="195" r="4.2"/><circle cx="390" cy="190" r="3.9"/><circle cx="150" cy="222" r="4.4"/><circle cx="182" cy="215" r="3.6"/><circle cx="214" cy="223" r="4.9"/><circle cx="245" cy="214" r="3.7"/><circle cx="278" cy="221" r="4.1"/><circle cx="310" cy="212" r="4.6"/><circle cx="342" cy="219" r="3.5"/>
+        <circle cx="372" cy="211" r="4.3"/><circle cx="145" cy="247" r="3.5"/><circle cx="177" cy="240" r="4.8"/><circle cx="208" cy="248" r="3.7"/><circle cx="240" cy="239" r="4.4"/><circle cx="272" cy="246" r="3.6"/><circle cx="302" cy="237" r="4.9"/><circle cx="334" cy="244" r="3.8"/><circle cx="365" cy="238" r="4.2"/>
+        <circle cx="156" cy="272" r="4.6"/><circle cx="188" cy="264" r="3.7"/><circle cx="220" cy="271" r="4.8"/><circle cx="252" cy="262" r="3.6"/><circle cx="283" cy="269" r="4.1"/><circle cx="315" cy="261" r="4.5"/><circle cx="346" cy="270" r="3.8"/><circle cx="376" cy="263" r="4.4"/><circle cx="104" cy="295" r="3.6"/>
+        <circle cx="136" cy="288" r="4.8"/><circle cx="168" cy="297" r="3.7"/><circle cx="200" cy="289" r="4.2"/><circle cx="232" cy="296" r="3.5"/><circle cx="264" cy="287" r="4.7"/><circle cx="296" cy="294" r="3.8"/><circle cx="328" cy="286" r="4.4"/><circle cx="87" cy="311" r="3.7"/><circle cx="118" cy="320" r="4.2"/>
+        <circle cx="150" cy="313" r="3.5"/><circle cx="183" cy="322" r="4.8"/><circle cx="216" cy="314" r="3.8"/><circle cx="75" cy="342" r="3.6"/><circle cx="105" cy="336" r="4.5"/><circle cx="138" cy="345" r="3.8"/><circle cx="170" cy="338" r="4.2"/><circle cx="202" cy="347" r="3.5"/><circle cx="105" cy="366" r="4.3"/>
+        <circle cx="137" cy="360" r="3.5"/><circle cx="170" cy="369" r="4.7"/>
+      </g>
+      <!-- The only retained line is the analytical reference for the pre-SPRi support. -->
+      <use xlink:href="#c-support" fill="none" stroke="#168FA3" stroke-width="1.8" stroke-opacity="0.82" stroke-dasharray="6 6"/>
+    </g>
+    <text class="caption" x="210" y="500">SPRi enrichment restores conditional exploration</text>
+  </g>
+</svg>
