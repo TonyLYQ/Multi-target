@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="2180" height="620" viewBox="0 0 2180 620"
+     role="img" aria-labelledby="figure-title figure-desc">
+  <title id="figure-title">SPRi-enabled expansion of target-conditioned chemical exploration</title>
+  <desc id="figure-desc">Four aligned chemical-space panels compare the pretrained prior, a data-rich target condition, a sparse target condition, and the expanded conditional space after SPRi data enrichment.</desc>
+
+  <defs>
+    <style>
+      .panel-letter { font: 700 30px Arial, Helvetica, sans-serif; fill: #172033; }
+      .caption { font: 500 17px Arial, Helvetica, sans-serif; fill: #6B7280; text-anchor: middle; }
+      .transition-label { font: 600 15px Arial, Helvetica, sans-serif; fill: #475569; text-anchor: middle; }
+      .background-dot { fill: #D9DEE5; }
+      .prior-dot { fill: #91A4B8; }
+      .condition-dot { fill: #168FA3; }
+      .spri-dot { fill: #389765; }
+    </style>
+
+    <marker id="arrowhead" markerWidth="11" markerHeight="11" refX="9" refY="5.5" orient="auto">
+      <path d="M0,0 L10,5.5 L0,11 Z" fill="#475569"/>
+    </marker>
+
+    <!-- One deterministic point cloud reused in all four panels. -->
+    <g id="chemical-space-cloud">
+      <circle cx="175" cy="90" r="4.1"/><circle cx="210" cy="86" r="3.7"/><circle cx="245" cy="93" r="4.5"/>
+      <circle cx="130" cy="108" r="3.8"/><circle cx="155" cy="102" r="4.6"/><circle cx="190" cy="110" r="3.5"/><circle cx="225" cy="104" r="4.1"/><circle cx="260" cy="111" r="4.7"/><circle cx="295" cy="106" r="3.8"/>
+      <circle cx="100" cy="123" r="4.4"/><circle cx="125" cy="118" r="3.6"/><circle cx="160" cy="126" r="4.0"/><circle cx="195" cy="120" r="4.8"/><circle cx="230" cy="128" r="3.7"/><circle cx="265" cy="121" r="4.2"/><circle cx="300" cy="126" r="3.5"/><circle cx="335" cy="119" r="4.5"/>
+      <circle cx="70" cy="144" r="3.9"/><circle cx="98" cy="137" r="4.7"/><circle cx="130" cy="147" r="3.6"/><circle cx="165" cy="139" r="4.2"/><circle cx="198" cy="148" r="4.9"/><circle cx="235" cy="141" r="3.8"/><circle cx="270" cy="146" r="4.3"/><circle cx="305" cy="138" r="3.5"/><circle cx="340" cy="145" r="4.6"/><circle cx="368" cy="139" r="3.9"/>
+      <circle cx="52" cy="169" r="4.5"/><circle cx="82" cy="162" r="3.6"/><circle cx="115" cy="171" r="4.1"/><circle cx="148" cy="164" r="4.8"/><circle cx="180" cy="173" r="3.7"/><circle cx="215" cy="166" r="4.3"/><circle cx="250" cy="172" r="3.5"/><circle cx="285" cy="163" r="4.6"/><circle cx="318" cy="170" r="3.8"/><circle cx="350" cy="165" r="4.4"/><circle cx="382" cy="174" r="3.6"/>
+      <circle cx="40" cy="193" r="3.7"/><circle cx="66" cy="187" r="4.4"/><circle cx="98" cy="196" r="3.5"/><circle cx="128" cy="189" r="4.8"/><circle cx="160" cy="198" r="4.0"/><circle cx="195" cy="191" r="3.6"/><circle cx="228" cy="199" r="4.5"/><circle cx="260" cy="190" r="3.8"/><circle cx="292" cy="197" r="4.7"/><circle cx="325" cy="188" r="3.5"/><circle cx="355" cy="195" r="4.2"/><circle cx="390" cy="190" r="3.9"/>
+      <circle cx="30" cy="218" r="4.3"/><circle cx="58" cy="211" r="3.5"/><circle cx="90" cy="220" r="4.7"/><circle cx="120" cy="213" r="3.8"/><circle cx="150" cy="222" r="4.4"/><circle cx="182" cy="215" r="3.6"/><circle cx="214" cy="223" r="4.9"/><circle cx="245" cy="214" r="3.7"/><circle cx="278" cy="221" r="4.1"/><circle cx="310" cy="212" r="4.6"/><circle cx="342" cy="219" r="3.5"/><circle cx="372" cy="211" r="4.3"/><circle cx="400" cy="220" r="3.8"/>
+      <circle cx="25" cy="242" r="3.6"/><circle cx="54" cy="236" r="4.6"/><circle cx="85" cy="245" r="3.8"/><circle cx="115" cy="238" r="4.2"/><circle cx="145" cy="247" r="3.5"/><circle cx="177" cy="240" r="4.8"/><circle cx="208" cy="248" r="3.7"/><circle cx="240" cy="239" r="4.4"/><circle cx="272" cy="246" r="3.6"/><circle cx="302" cy="237" r="4.9"/><circle cx="334" cy="244" r="3.8"/><circle cx="365" cy="238" r="4.2"/><circle cx="395" cy="247" r="3.5"/>
+      <circle cx="30" cy="268" r="4.7"/><circle cx="62" cy="261" r="3.8"/><circle cx="94" cy="270" r="4.3"/><circle cx="125" cy="263" r="3.5"/><circle cx="156" cy="272" r="4.6"/><circle cx="188" cy="264" r="3.7"/><circle cx="220" cy="271" r="4.8"/><circle cx="252" cy="262" r="3.6"/><circle cx="283" cy="269" r="4.1"/><circle cx="315" cy="261" r="4.5"/><circle cx="346" cy="270" r="3.8"/><circle cx="376" cy="263" r="4.4"/><circle cx="400" cy="271" r="3.5"/>
+      <circle cx="42" cy="292" r="3.9"/><circle cx="72" cy="286" r="4.5"/><circle cx="104" cy="295" r="3.6"/><circle cx="136" cy="288" r="4.8"/><circle cx="168" cy="297" r="3.7"/><circle cx="200" cy="289" r="4.2"/><circle cx="232" cy="296" r="3.5"/><circle cx="264" cy="287" r="4.7"/><circle cx="296" cy="294" r="3.8"/><circle cx="328" cy="286" r="4.4"/><circle cx="360" cy="295" r="3.6"/><circle cx="388" cy="289" r="4.1"/>
+      <circle cx="55" cy="318" r="4.6"/><circle cx="87" cy="311" r="3.7"/><circle cx="118" cy="320" r="4.2"/><circle cx="150" cy="313" r="3.5"/><circle cx="183" cy="322" r="4.8"/><circle cx="216" cy="314" r="3.8"/><circle cx="248" cy="321" r="4.4"/><circle cx="280" cy="312" r="3.6"/><circle cx="312" cy="319" r="4.7"/><circle cx="344" cy="311" r="3.7"/><circle cx="375" cy="320" r="4.1"/>
+      <circle cx="75" cy="342" r="3.6"/><circle cx="105" cy="336" r="4.5"/><circle cx="138" cy="345" r="3.8"/><circle cx="170" cy="338" r="4.2"/><circle cx="202" cy="347" r="3.5"/><circle cx="235" cy="339" r="4.8"/><circle cx="268" cy="346" r="3.7"/><circle cx="300" cy="337" r="4.4"/><circle cx="332" cy="344" r="3.6"/><circle cx="360" cy="339" r="4.1"/>
+      <circle cx="105" cy="366" r="4.3"/><circle cx="137" cy="360" r="3.5"/><circle cx="170" cy="369" r="4.7"/><circle cx="205" cy="362" r="3.8"/><circle cx="240" cy="370" r="4.2"/><circle cx="273" cy="361" r="3.6"/><circle cx="306" cy="368" r="4.6"/><circle cx="338" cy="363" r="3.7"/>
+      <circle cx="150" cy="387" r="3.8"/><circle cx="182" cy="381" r="4.4"/><circle cx="216" cy="389" r="3.6"/><circle cx="250" cy="382" r="4.7"/><circle cx="284" cy="388" r="3.9"/>
+    </g>
+
+    <g id="known-ligand-star">
+      <path d="M0,-14 L3.4,-4.7 L13.3,-4.3 L5.4,1.7 L8.2,11.3 L0,5.8 L-8.2,11.3 L-5.4,1.7 L-13.3,-4.3 L-3.4,-4.7 Z"
+            fill="#F28E2B" stroke="#FFFFFF" stroke-width="2" stroke-linejoin="round"/>
+    </g>
+  </defs>
+
+  <rect width="2180" height="620" fill="#FFFFFF"/>
+
+  <!-- A. Broad pretrained chemical prior -->
+  <g id="panel-a" transform="translate(30 45)">
+    <text class="panel-letter" x="0" y="30">A</text>
+    <g transform="translate(0 35)" class="prior-dot" opacity="0.78">
+      <use xlink:href="#chemical-space-cloud"/>
+    </g>
+    <text class="caption" x="210" y="500">Broad pretrained chemical prior</text>
+  </g>
+
+  <!-- B. Data-rich target condition -->
+  <g id="panel-b" transform="translate(520 45)">
+    <text class="panel-letter" x="0" y="30">B</text>
+    <g transform="translate(0 35)" class="background-dot" opacity="0.68">
+      <use xlink:href="#chemical-space-cloud"/>
+    </g>
+    <g transform="translate(0 35)">
+      <path d="M43,213 C48,157 86,118 143,122 C191,126 204,171 196,221 C190,274 166,315 112,313 C62,309 35,267 43,213 Z"
+            fill="#40B7C4" fill-opacity="0.20" stroke="#168FA3" stroke-width="2.2"/>
+      <path d="M221,129 C247,93 316,91 358,119 C400,148 402,193 367,211 C329,229 265,203 233,175 C215,159 210,145 221,129 Z"
+            fill="#40B7C4" fill-opacity="0.20" stroke="#168FA3" stroke-width="2.2"/>
+      <path d="M234,263 C263,235 333,235 369,258 C405,282 388,326 350,343 C305,360 249,337 230,303 C221,287 222,275 234,263 Z"
+            fill="#40B7C4" fill-opacity="0.20" stroke="#168FA3" stroke-width="2.2"/>
+
+      <g class="condition-dot">
+        <circle cx="70" cy="144" r="5"/><circle cx="98" cy="137" r="5"/><circle cx="130" cy="147" r="5"/><circle cx="82" cy="162" r="5"/><circle cx="115" cy="171" r="5"/><circle cx="148" cy="164" r="5"/>
+        <circle cx="52" cy="169" r="5"/><circle cx="66" cy="187" r="5"/><circle cx="98" cy="196" r="5"/><circle cx="128" cy="189" r="5"/><circle cx="160" cy="198" r="5"/><circle cx="40" cy="193" r="5"/>
+        <circle cx="58" cy="211" r="5"/><circle cx="90" cy="220" r="5"/><circle cx="120" cy="213" r="5"/><circle cx="150" cy="222" r="5"/><circle cx="182" cy="215" r="5"/>
+        <circle cx="54" cy="236" r="5"/><circle cx="85" cy="245" r="5"/><circle cx="115" cy="238" r="5"/><circle cx="145" cy="247" r="5"/><circle cx="177" cy="240" r="5"/>
+        <circle cx="62" cy="261" r="5"/><circle cx="94" cy="270" r="5"/><circle cx="125" cy="263" r="5"/><circle cx="156" cy="272" r="5"/><circle cx="188" cy="264" r="5"/>
+        <circle cx="72" cy="286" r="5"/><circle cx="104" cy="295" r="5"/><circle cx="136" cy="288" r="5"/><circle cx="168" cy="297" r="5"/><circle cx="87" cy="311" r="5"/><circle cx="118" cy="320" r="5"/><circle cx="150" cy="313" r="5"/>
+
+        <circle cx="245" cy="93" r="5"/><circle cx="295" cy="106" r="5"/><circle cx="265" cy="121" r="5"/><circle cx="300" cy="126" r="5"/><circle cx="335" cy="119" r="5"/>
+        <circle cx="235" cy="141" r="5"/><circle cx="270" cy="146" r="5"/><circle cx="305" cy="138" r="5"/><circle cx="340" cy="145" r="5"/><circle cx="368" cy="139" r="5"/>
+        <circle cx="250" cy="172" r="5"/><circle cx="285" cy="163" r="5"/><circle cx="318" cy="170" r="5"/><circle cx="350" cy="165" r="5"/><circle cx="382" cy="174" r="5"/>
+        <circle cx="260" cy="190" r="5"/><circle cx="292" cy="197" r="5"/><circle cx="325" cy="188" r="5"/><circle cx="355" cy="195" r="5"/>
+
+        <circle cx="272" cy="246" r="5"/><circle cx="302" cy="237" r="5"/><circle cx="334" cy="244" r="5"/><circle cx="365" cy="238" r="5"/>
+        <circle cx="252" cy="262" r="5"/><circle cx="283" cy="269" r="5"/><circle cx="315" cy="261" r="5"/><circle cx="346" cy="270" r="5"/><circle cx="376" cy="263" r="5"/>
+        <circle cx="264" cy="287" r="5"/><circle cx="296" cy="294" r="5"/><circle cx="328" cy="286" r="5"/><circle cx="360" cy="295" r="5"/>
+        <circle cx="248" cy="321" r="5"/><circle cx="280" cy="312" r="5"/><circle cx="312" cy="319" r="5"/><circle cx="344" cy="311" r="5"/><circle cx="268" cy="346" r="5"/><circle cx="300" cy="337" r="5"/><circle cx="332" cy="344" r="5"/>
+
+        <!-- A few low-probability samples just beyond the contours. -->
+        <circle cx="100" cy="108" r="4.5"/><circle cx="205" cy="362" r="4.5"/><circle cx="400" cy="220" r="4.5"/><circle cx="388" cy="289" r="4.5"/>
+      </g>
+    </g>
+    <text class="caption" x="210" y="500">Data-rich condition enables broad exploration</text>
+  </g>
+
+  <!-- C. Sparse target condition -->
+  <g id="panel-c" transform="translate(1010 45)">
+    <text class="panel-letter" x="0" y="30">C</text>
+    <g transform="translate(0 35)" class="background-dot" opacity="0.68">
+      <use xlink:href="#chemical-space-cloud"/>
+    </g>
+    <g transform="translate(0 35)">
+      <path d="M178,213 C188,195 218,193 239,204 C259,216 260,245 245,264 C231,281 201,282 184,266 C168,251 167,230 178,213 Z"
+            fill="#40B7C4" fill-opacity="0.20" stroke="#168FA3" stroke-width="2.2"/>
+      <g class="condition-dot">
+        <circle cx="195" cy="191" r="5"/><circle cx="228" cy="199" r="5"/><circle cx="182" cy="215" r="5"/>
+        <circle cx="214" cy="223" r="5"/><circle cx="245" cy="214" r="5"/><circle cx="177" cy="240" r="5"/>
+        <circle cx="208" cy="248" r="5"/><circle cx="240" cy="239" r="5"/><circle cx="188" cy="264" r="5"/>
+        <circle cx="220" cy="271" r="5"/><circle cx="252" cy="262" r="5"/>
+      </g>
+      <use xlink:href="#known-ligand-star" x="214" y="238"/>
+    </g>
+    <text class="caption" x="210" y="500">Sparse condition restricts local exploration</text>
+  </g>
+
+  <!-- Reserved blank area for a user-supplied SPRi icon: x=1495..1665, y=115..225. -->
+  <g id="spri-transition">
+    <line x1="1468" y1="310" x2="1688" y2="310" stroke="#475569" stroke-width="2.5" marker-end="url(#arrowhead)"/>
+    <text class="transition-label" x="1578" y="344">+ SPRi binding data</text>
+  </g>
+
+  <!-- D. SPRi-enriched target condition -->
+  <g id="panel-d" transform="translate(1720 45)">
+    <text class="panel-letter" x="0" y="30">D</text>
+    <g transform="translate(0 35)" class="background-dot" opacity="0.68">
+      <use xlink:href="#chemical-space-cloud"/>
+    </g>
+    <g transform="translate(0 35)">
+      <path d="M38,213 C45,145 93,111 151,122 C202,132 206,181 196,235 C186,294 151,327 95,316 C48,306 28,263 38,213 Z"
+            fill="#68B98A" fill-opacity="0.21" stroke="#389765" stroke-width="2.2"/>
+      <path d="M226,124 C257,89 329,94 370,124 C407,152 402,198 366,216 C324,237 267,205 235,177 C217,160 213,141 226,124 Z"
+            fill="#68B98A" fill-opacity="0.21" stroke="#389765" stroke-width="2.2"/>
+      <path d="M235,262 C267,231 337,238 373,265 C405,289 385,331 347,346 C302,362 249,338 231,304 C222,287 223,275 235,262 Z"
+            fill="#68B98A" fill-opacity="0.21" stroke="#389765" stroke-width="2.2"/>
+
+      <!-- Pre-SPRi conditional support retained as a dashed reference contour. -->
+      <path d="M178,213 C188,195 218,193 239,204 C259,216 260,245 245,264 C231,281 201,282 184,266 C168,251 167,230 178,213 Z"
+            fill="none" stroke="#168FA3" stroke-width="2.2" stroke-dasharray="7 6"/>
+      <g class="condition-dot">
+        <circle cx="195" cy="191" r="5"/><circle cx="228" cy="199" r="5"/><circle cx="182" cy="215" r="5"/>
+        <circle cx="245" cy="214" r="5"/><circle cx="177" cy="240" r="5"/><circle cx="240" cy="239" r="5"/>
+        <circle cx="188" cy="264" r="5"/><circle cx="220" cy="271" r="5"/><circle cx="252" cy="262" r="5"/>
+      </g>
+      <use xlink:href="#known-ligand-star" x="214" y="238"/>
+
+      <g class="spri-dot">
+        <circle cx="70" cy="144" r="5"/><circle cx="98" cy="137" r="5"/><circle cx="130" cy="147" r="5"/><circle cx="82" cy="162" r="5"/><circle cx="115" cy="171" r="5"/><circle cx="148" cy="164" r="5"/>
+        <circle cx="52" cy="169" r="5"/><circle cx="66" cy="187" r="5"/><circle cx="98" cy="196" r="5"/><circle cx="128" cy="189" r="5"/><circle cx="160" cy="198" r="5"/><circle cx="40" cy="193" r="5"/>
+        <circle cx="58" cy="211" r="5"/><circle cx="90" cy="220" r="5"/><circle cx="120" cy="213" r="5"/><circle cx="150" cy="222" r="5"/>
+        <circle cx="54" cy="236" r="5"/><circle cx="85" cy="245" r="5"/><circle cx="115" cy="238" r="5"/><circle cx="145" cy="247" r="5"/>
+        <circle cx="62" cy="261" r="5"/><circle cx="94" cy="270" r="5"/><circle cx="125" cy="263" r="5"/><circle cx="156" cy="272" r="5"/>
+        <circle cx="72" cy="286" r="5"/><circle cx="104" cy="295" r="5"/><circle cx="136" cy="288" r="5"/><circle cx="168" cy="297" r="5"/><circle cx="87" cy="311" r="5"/><circle cx="118" cy="320" r="5"/><circle cx="150" cy="313" r="5"/>
+
+        <circle cx="245" cy="93" r="5"/><circle cx="295" cy="106" r="5"/><circle cx="265" cy="121" r="5"/><circle cx="300" cy="126" r="5"/><circle cx="335" cy="119" r="5"/>
+        <circle cx="235" cy="141" r="5"/><circle cx="270" cy="146" r="5"/><circle cx="305" cy="138" r="5"/><circle cx="340" cy="145" r="5"/><circle cx="368" cy="139" r="5"/>
+        <circle cx="250" cy="172" r="5"/><circle cx="285" cy="163" r="5"/><circle cx="318" cy="170" r="5"/><circle cx="350" cy="165" r="5"/><circle cx="382" cy="174" r="5"/>
+        <circle cx="260" cy="190" r="5"/><circle cx="292" cy="197" r="5"/><circle cx="325" cy="188" r="5"/><circle cx="355" cy="195" r="5"/>
+
+        <circle cx="272" cy="246" r="5"/><circle cx="302" cy="237" r="5"/><circle cx="334" cy="244" r="5"/><circle cx="365" cy="238" r="5"/>
+        <circle cx="283" cy="269" r="5"/><circle cx="315" cy="261" r="5"/><circle cx="346" cy="270" r="5"/><circle cx="376" cy="263" r="5"/>
+        <circle cx="264" cy="287" r="5"/><circle cx="296" cy="294" r="5"/><circle cx="328" cy="286" r="5"/><circle cx="360" cy="295" r="5"/>
+        <circle cx="248" cy="321" r="5"/><circle cx="280" cy="312" r="5"/><circle cx="312" cy="319" r="5"/><circle cx="344" cy="311" r="5"/><circle cx="268" cy="346" r="5"/><circle cx="300" cy="337" r="5"/><circle cx="332" cy="344" r="5"/>
+      </g>
+    </g>
+    <text class="caption" x="210" y="500">SPRi enrichment restores conditional exploration</text>
+  </g>
+</svg>
