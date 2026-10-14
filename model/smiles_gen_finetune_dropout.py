@@ -18,12 +18,14 @@ import torch
 import torch.distributed as dist
 import yaml
 from torch import nn
+from torch.nn import functional as F
 from torch.nn.parallel import DistributedDataParallel
 from torch.optim import AdamW
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.distributed import DistributedSampler
 from torch.utils.tensorboard import SummaryWriter
 from transformers import get_cosine_schedule_with_warmup
+from transformers.modeling_outputs import CausalLMOutputWithCrossAttentions
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -40,6 +42,61 @@ class PositiveRecord:
     source_row_number: int
     smiles: str
     target_ids: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class ConditioningDropoutConfig:
+    full_probability: float = 0.8
+    single_probability: float = 0.1
+    unconditional_probability: float = 0.1
+
+    def __post_init__(self) -> None:
+        probabilities = (
+            self.full_probability,
+            self.single_probability,
+            self.unconditional_probability,
+        )
+        if any(not math.isfinite(p) or not 0.0 <= p <= 1.0 for p in probabilities):
+            raise ValueError(
+                "conditioning_dropout probabilities must be finite and in [0, 1]"
+            )
+        if not math.isclose(sum(probabilities), 1.0, rel_tol=0.0, abs_tol=1e-8):
+            raise ValueError("conditioning_dropout probabilities must sum to 1")
+
+    @classmethod
+    def from_config(cls, config: dict[str, Any]) -> ConditioningDropoutConfig:
+        section = config.get("conditioning_dropout", {})
+        if not isinstance(section, dict):
+            raise ValueError("conditioning_dropout must be a mapping")
+        fields = (
+            "full_probability", "single_probability", "unconditional_probability"
+        )
+        unknown = set(section) - set(fields)
+        if unknown:
+            raise ValueError(f"Unknown conditioning_dropout options: {sorted(unknown)}")
+        defaults = cls()
+        return cls(**{
+            name: float(section.get(name, getattr(defaults, name))) for name in fields
+        })
+
+    def as_dict(self) -> dict[str, float]:
+        return {
+            "full_probability": self.full_probability,
+            "single_probability": self.single_probability,
+            "unconditional_probability": self.unconditional_probability,
+        }
+
+    def sample(self, target_ids: tuple[str, ...]) -> tuple[tuple[str, ...], str]:
+        if not target_ids:
+            raise ValueError("Original training records must have non-empty targets")
+        if self.full_probability == 1.0:
+            return target_ids, "full"
+        draw = random.random()
+        if draw < self.full_probability:
+            return target_ids, "full"
+        if draw < self.full_probability + self.single_probability:
+            return (random.choice(target_ids),), "single"
+        return (), "unconditional"
 
 
 def load_yaml(path: Path) -> dict[str, Any]:
@@ -354,8 +411,14 @@ class PositiveTargetDataset(Dataset):
 
 
 class PositiveTargetCollator:
-    def __init__(self, pad_token_id: int) -> None:
+    def __init__(
+        self,
+        pad_token_id: int,
+        conditioning_dropout: ConditioningDropoutConfig | None = None,
+    ) -> None:
         self.pad_token_id = pad_token_id
+        # None preserves complete conditions for validation/evaluation.
+        self.conditioning_dropout = conditioning_dropout
 
     def __call__(
         self,
@@ -376,10 +439,16 @@ class PositiveTargetCollator:
         unique_target_ids: list[str] = []
         target_to_index: dict[str, int] = {}
         sample_target_indices: list[list[int]] = []
+        conditioning_modes: list[str] = []
         for row, (token_ids, target_ids) in enumerate(batch):
             length = len(token_ids)
             input_ids[row, :length] = torch.tensor(token_ids, dtype=torch.long)
             attention_mask[row, :length] = 1
+
+            mode = "full"
+            if self.conditioning_dropout is not None:
+                target_ids, mode = self.conditioning_dropout.sample(target_ids)
+            conditioning_modes.append(mode)
 
             target_indices: list[int] = []
             for target_id in target_ids:
@@ -397,6 +466,7 @@ class PositiveTargetCollator:
             "labels": labels,
             "unique_target_ids": unique_target_ids,
             "sample_target_indices": sample_target_indices,
+            "conditioning_modes": conditioning_modes,
         }
 
 
@@ -406,6 +476,7 @@ def make_dataloader(
     num_workers: int,
     distributed: bool,
     shuffle: bool,
+    conditioning_dropout: ConditioningDropoutConfig | None = None,
 ) -> tuple[DataLoader, DistributedSampler | None]:
     sampler = None
     if distributed:
@@ -420,7 +491,10 @@ def make_dataloader(
         num_workers=num_workers,
         pin_memory=torch.cuda.is_available(),
         drop_last=False,
-        collate_fn=PositiveTargetCollator(dataset.tokenizer.pad_token_id),
+        collate_fn=PositiveTargetCollator(
+            dataset.tokenizer.pad_token_id,
+            conditioning_dropout=conditioning_dropout,
+        ),
         persistent_workers=num_workers > 0,
     )
     return loader, sampler
@@ -457,18 +531,59 @@ class ProteinConditionedSmilesFineTuner(nn.Module):
         labels: torch.LongTensor,
         unique_protein_encodings: Sequence[Any],
         sample_target_indices: Sequence[Sequence[int]],
-    ):
+    ) -> CausalLMOutputWithCrossAttentions:
+        if len(sample_target_indices) != input_ids.size(0):
+            raise ValueError("sample_target_indices must match the SMILES batch size")
+        conditioned_rows = [
+            i for i, targets in enumerate(sample_target_indices) if targets
+        ]
+        if not conditioned_rows:
+            # No dummy memory: bypass both the encoder and every cross-attention.
+            return self.smiles_model(
+                input_ids=input_ids,
+                attention_mask=attention_mask,
+                labels=labels,
+            )
+
         target_output = self.target_encoder.forward_unique(
             unique_protein_encodings,
-            sample_target_indices,
+            [sample_target_indices[i] for i in conditioned_rows],
         )
-        return self.smiles_model(
-            input_ids=input_ids,
-            attention_mask=attention_mask,
-            labels=labels,
+        if len(conditioned_rows) == input_ids.size(0):
+            return self.smiles_model(
+                input_ids=input_ids,
+                attention_mask=attention_mask,
+                labels=labels,
+                encoder_hidden_states=target_output.last_hidden_state,
+                encoder_attention_mask=target_output.attention_mask,
+            )
+
+        unconditional_rows = [
+            i for i, targets in enumerate(sample_target_indices) if not targets
+        ]
+        conditioned_index = torch.tensor(conditioned_rows, device=input_ids.device)
+        unconditional_index = torch.tensor(unconditional_rows, device=input_ids.device)
+        conditioned_output = self.smiles_model(
+            input_ids=input_ids.index_select(0, conditioned_index),
+            attention_mask=attention_mask.index_select(0, conditioned_index),
             encoder_hidden_states=target_output.last_hidden_state,
             encoder_attention_mask=target_output.attention_mask,
         )
+        unconditional_output = self.smiles_model(
+            input_ids=input_ids.index_select(0, unconditional_index),
+            attention_mask=attention_mask.index_select(0, unconditional_index),
+        )
+        row_order = torch.cat((conditioned_index, unconditional_index))
+        logits = torch.cat(
+            (conditioned_output.logits, unconditional_output.logits), dim=0
+        ).index_select(0, torch.argsort(row_order))
+        # One token-mean loss preserves the original weighting, including padding.
+        loss = F.cross_entropy(
+            logits[:, :-1, :].contiguous().view(-1, logits.size(-1)),
+            labels[:, 1:].contiguous().view(-1),
+            ignore_index=-100,
+        )
+        return CausalLMOutputWithCrossAttentions(loss=loss, logits=logits)
 
 
 def load_pretrained_smiles_weights(
@@ -720,8 +835,12 @@ def train_one_epoch(
     running_loss_sum = 0.0
     running_token_count = 0
     last_logged_loss = math.nan
+    mode_names = ("full", "single", "unconditional")
+    mode_counts = [0, 0, 0]
 
     for step, batch in enumerate(loader, start=1):
+        for index, mode in enumerate(mode_names):
+            mode_counts[index] += batch["conditioning_modes"].count(mode)
         input_ids = batch["input_ids"].to(device, non_blocking=True)
         attention_mask = batch["attention_mask"].to(device, non_blocking=True)
         labels = batch["labels"].to(device, non_blocking=True)
@@ -833,6 +952,22 @@ def train_one_epoch(
                 save_state_dict_only=save_state_dict_only,
             )
 
+    totals = torch.tensor(mode_counts, device=device, dtype=torch.long)
+    reduce_sum(totals, distributed)
+    sample_count = int(totals.sum().item())
+    if is_main_process(rank):
+        summary = ", ".join(
+            f"{mode}={int(count)} ({int(count) / max(sample_count, 1):.2%})"
+            for mode, count in zip(mode_names, totals.tolist())
+        )
+        print(f"epoch={epoch} conditioning samples: {summary}", flush=True)
+        if writer is not None:
+            for mode, count in zip(mode_names, totals.tolist()):
+                writer.add_scalar(f"conditioning/{mode}_count", count, epoch)
+                writer.add_scalar(
+                    f"conditioning/{mode}_fraction", count / max(sample_count, 1), epoch
+                )
+
     return global_step, globally_average_loss(
         epoch_loss_sum,
         epoch_token_count,
@@ -904,12 +1039,12 @@ def resolve_config(
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Fine-tune a protein-conditioned GPT-2 SMILES generator."
+        description="Fine-tune a GPT-2 SMILES generator with target conditioning dropout."
     )
     parser.add_argument(
         "--config",
         type=Path,
-        default=Path("config/smiles_gen_finetune_config.yaml"),
+        default=Path("config/smiles_gen_finetune_dropout_config.yaml"),
         help="Fine-tuning config YAML.",
     )
     parser.add_argument(
@@ -922,6 +1057,8 @@ def main() -> int:
 
     config_path = args.config if args.config.exists() else project_path(args.config)
     config = load_yaml(config_path)
+    conditioning_dropout = ConditioningDropoutConfig.from_config(config)
+    config["conditioning_dropout"] = conditioning_dropout.as_dict()
     distributed, rank, local_rank, world_size = init_distributed()
     writer: SummaryWriter | None = None
 
@@ -934,7 +1071,7 @@ def main() -> int:
 
         training_config = config["training"]
         output_dir = project_path(
-            training_config.get("output_dir", "outputs/smiles_gen_finetune")
+            training_config.get("output_dir", "outputs/smiles_gen_finetune_dropout")
         )
         checkpoint_dir = output_dir / "checkpoints"
         tensorboard_dir = output_dir / "tensorboard"
@@ -1074,6 +1211,7 @@ def main() -> int:
             num_workers=num_workers,
             distributed=distributed,
             shuffle=True,
+            conditioning_dropout=conditioning_dropout,
         )
         valid_loader, valid_sampler = make_dataloader(
             valid_dataset,
@@ -1174,11 +1312,21 @@ def main() -> int:
             f"unique proteins: {len(unique_target_ids)}.",
             rank,
         )
+        print_main(
+            "Training conditioning probabilities: "
+            f"full={conditioning_dropout.full_probability:.2%}, "
+            f"single={conditioning_dropout.single_probability:.2%}, "
+            f"unconditional={conditioning_dropout.unconditional_probability:.2%}; "
+            "validation always uses complete original target sets.",
+            rank,
+        )
         if distributed:
             model = DistributedDataParallel(
                 model,
                 device_ids=[local_rank] if device.type == "cuda" else None,
                 output_device=local_rank if device.type == "cuda" else None,
+                # A rank may draw an entirely unconditional batch.
+                find_unused_parameters=conditioning_dropout.unconditional_probability > 0.0,
             )
 
         mixed_precision = str(

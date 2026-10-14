@@ -1,7 +1,15 @@
 seed: 42
 
+# Per training sample; probabilities are fractions in [0, 1] and must sum to 1.
+# Validation always retains the full target set. Single mode chooses uniformly.
+# Baselines: 1.0/0.0/0.0 (no dropout), 0.9/0.0/0.1 (unconditional only).
+conditioning_dropout:
+  full_probability: 0.8
+  single_probability: 0.1
+  unconditional_probability: 0.1
+
 data:
-  csv_path: finetuning_data/MTD_combined_Rev_ErbA.csv
+  csv_path: finetuning_data/MTD_combined.csv
   protein_dir: ESMC_data
   vocab_path: null
   max_length: null
@@ -26,7 +34,7 @@ target_encoder:
   layer_norm_epsilon: 1.0e-5
 
 training:
-  output_dir: outputs/smiles_gen_finetune_MR
+  output_dir: outputs/smiles_gen_finetune_dropout_MTD
   per_device_train_batch_size: 64
   per_device_eval_batch_size: 64
   gradient_accumulation_steps: 1
