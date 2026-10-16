@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import csv
+import copy
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -11,6 +12,7 @@ import torch
 from torch import nn
 from transformers import GPT2Config, GPT2LMHeadModel
 from transformers.modeling_outputs import CausalLMOutputWithCrossAttentions
+from transformers.models.gpt2.modeling_gpt2 import GPT2Block
 
 
 SMILES_TOKEN_RE = re.compile(r"(\[[^\[\]]+\]|Br|Cl|%\d{2}|.)")
@@ -114,6 +116,7 @@ class SmilesGPT2ModelConfig:
     attn_pdrop: float = 0.1
     layer_norm_epsilon: float = 1e-5
     add_cross_attention: bool = False
+    num_cross_attention_layers: int | None = None
 
     def to_gpt2_config(self) -> GPT2Config:
         return GPT2Config(
@@ -131,6 +134,11 @@ class SmilesGPT2ModelConfig:
             eos_token_id=self.eos_token_id,
             pad_token_id=self.pad_token_id,
             add_cross_attention=self.add_cross_attention,
+            num_cross_attention_layers=(
+                self.num_cross_attention_layers
+                if self.num_cross_attention_layers is not None
+                else self.n_layer if self.add_cross_attention else 0
+            ),
         )
 
 
@@ -145,6 +153,7 @@ def build_smiles_gpt2_config(
     attn_pdrop: float = 0.1,
     layer_norm_epsilon: float = 1e-5,
     add_cross_attention: bool = False,
+    num_cross_attention_layers: int | None = None,
 ) -> GPT2Config:
     model_config = SmilesGPT2ModelConfig(
         vocab_size=tokenizer.vocab_size,
@@ -160,12 +169,75 @@ def build_smiles_gpt2_config(
         attn_pdrop=attn_pdrop,
         layer_norm_epsilon=layer_norm_epsilon,
         add_cross_attention=add_cross_attention,
+        num_cross_attention_layers=num_cross_attention_layers,
     )
     return model_config.to_gpt2_config()
 
 
+class GPT2BlockWithoutProteinAttention(GPT2Block):
+    """A normal GPT block that ignores memory supplied to later GPT blocks."""
+
+    def forward(
+        self,
+        hidden_states,
+        layer_past=None,
+        attention_mask=None,
+        head_mask=None,
+        encoder_hidden_states=None,
+        encoder_attention_mask=None,
+        use_cache=False,
+        output_attentions=False,
+        **kwargs,
+    ):
+        outputs = super().forward(
+            hidden_states,
+            layer_past=layer_past,
+            attention_mask=attention_mask,
+            head_mask=head_mask,
+            encoder_hidden_states=None,
+            encoder_attention_mask=None,
+            use_cache=use_cache,
+            output_attentions=output_attentions,
+            **kwargs,
+        )
+        # GPT2Model expects one cross-attention entry per block when requested.
+        return (*outputs, None) if output_attentions else outputs
+
+
 class ProteinConditionedGPT2LMHeadModel(GPT2LMHeadModel):
     """GPT-2 that keeps protein memory available throughout generation."""
+
+    def __init__(self, config: GPT2Config) -> None:
+        count = getattr(
+            config, "num_cross_attention_layers",
+            config.n_layer if config.add_cross_attention else 0,
+        )
+        if isinstance(count, bool) or not isinstance(count, int):
+            raise ValueError("num_cross_attention_layers must be an integer")
+        if not 0 <= count <= config.n_layer:
+            raise ValueError(
+                f"num_cross_attention_layers must be in [0, {config.n_layer}], got {count}"
+            )
+        if count and not config.add_cross_attention:
+            raise ValueError("Positive num_cross_attention_layers requires add_cross_attention=True")
+        config.num_cross_attention_layers = count
+        super().__init__(config)
+        if config.add_cross_attention:
+            plain_config = copy.deepcopy(config)
+            plain_config.add_cross_attention = False
+            for index in range(config.n_layer - count):
+                original = self.transformer.h[index]
+                # Replacing a block must not perturb initialization of the
+                # retained cross-attention layers or the later target encoder.
+                with torch.random.fork_rng(devices=[]):
+                    plain = GPT2BlockWithoutProteinAttention(plain_config, layer_idx=index)
+                # Retain the initialized/pretrained-compatible self-attention/FFN
+                # keys, and physically omit inactive cross-attention parameters.
+                plain.load_state_dict({
+                    key: value for key, value in original.state_dict().items()
+                    if not key.startswith(("crossattention.", "ln_cross_attn."))
+                }, strict=True)
+                self.transformer.h[index] = plain
 
     def prepare_inputs_for_generation(
         self,
@@ -210,6 +282,7 @@ class SmilesGPT2Generator(nn.Module):
         attn_pdrop: float = 0.1,
         layer_norm_epsilon: float = 1e-5,
         add_cross_attention: bool = False,
+        num_cross_attention_layers: int | None = None,
     ) -> "SmilesGPT2Generator":
         config = build_smiles_gpt2_config(
             tokenizer=tokenizer,
@@ -222,6 +295,7 @@ class SmilesGPT2Generator(nn.Module):
             attn_pdrop=attn_pdrop,
             layer_norm_epsilon=layer_norm_epsilon,
             add_cross_attention=add_cross_attention,
+            num_cross_attention_layers=num_cross_attention_layers,
         )
         return cls(config)
 

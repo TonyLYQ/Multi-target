@@ -458,6 +458,10 @@ class ProteinConditionedSmilesFineTuner(nn.Module):
         unique_protein_encodings: Sequence[Any],
         sample_target_indices: Sequence[Sequence[int]],
     ):
+        if self.smiles_model.config.num_cross_attention_layers == 0:
+            return self.smiles_model(
+                input_ids=input_ids, attention_mask=attention_mask, labels=labels,
+            )
         target_output = self.target_encoder.forward_unique(
             unique_protein_encodings,
             sample_target_indices,
@@ -502,8 +506,11 @@ def build_joint_model(
     tokenizer: SmilesTokenizer,
     pretrained_config: dict[str, Any],
     target_config: dict[str, Any],
+    num_cross_attention_layers: int | None = None,
 ) -> ProteinConditionedSmilesFineTuner:
     model_config = pretrained_config["model"]
+    if num_cross_attention_layers is None:
+        num_cross_attention_layers = model_config.get("num_cross_attention_layers", 8)
     smiles_model = SmilesGPT2Generator.from_tokenizer(
         tokenizer=tokenizer,
         max_position_embeddings=int(
@@ -519,6 +526,7 @@ def build_joint_model(
             model_config.get("layer_norm_epsilon", 1e-5)
         ),
         add_cross_attention=True,
+        num_cross_attention_layers=num_cross_attention_layers,
     )
 
     target_encoder_config = TargetSetEncoderConfig(
@@ -898,6 +906,10 @@ def resolve_config(
         "vocab_path": str(tokenizer_path),
     }
     resolved["resolved_pretrained"]["model"]["add_cross_attention"] = True
+    count = config.get("model", {}).get("num_cross_attention_layers", 8)
+    resolved.setdefault("model", {})["num_cross_attention_layers"] = count
+    # Existing inference scripts rebuild from resolved_pretrained.model.
+    resolved["resolved_pretrained"]["model"]["num_cross_attention_layers"] = count
     resolved.setdefault("data", {})["max_length"] = max_length
     return resolved
 
@@ -1089,6 +1101,9 @@ def main() -> int:
             tokenizer,
             pretrained_config,
             target_config,
+            num_cross_attention_layers=config.get("model", {}).get(
+                "num_cross_attention_layers", 8
+            ),
         )
         if args.resume is None:
             missing_keys, _ = load_pretrained_smiles_weights(
@@ -1174,11 +1189,19 @@ def main() -> int:
             f"unique proteins: {len(unique_target_ids)}.",
             rank,
         )
+        count = model.smiles_model.config.num_cross_attention_layers
+        total = model.smiles_model.config.n_layer
+        print_main(
+            f"GPT cross-attention: {count}/{total} layers enabled; "
+            f"active layers (1-based): {list(range(total - count + 1, total + 1))}",
+            rank,
+        )
         if distributed:
             model = DistributedDataParallel(
                 model,
                 device_ids=[local_rank] if device.type == "cuda" else None,
                 output_device=local_rank if device.type == "cuda" else None,
+                find_unused_parameters=count == 0,
             )
 
         mixed_precision = str(
