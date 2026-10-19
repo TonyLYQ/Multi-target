@@ -9,6 +9,7 @@ import math
 import os
 import random
 import sys
+from array import array
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Sequence
@@ -97,6 +98,153 @@ class ConditioningDropoutConfig:
         if draw < self.full_probability + self.single_probability:
             return (random.choice(target_ids),), "single"
         return (), "unconditional"
+
+
+@dataclass(frozen=True)
+class ZincExchangeConfig:
+    # Conditional on an already fully unconditional training example.
+    replacement_probability: float = 0.0
+    smi_path: str = "ZINC_data/zinc_filtered.smi"
+
+    def __post_init__(self) -> None:
+        if not math.isfinite(self.replacement_probability) or not (
+            0.0 <= self.replacement_probability <= 1.0
+        ):
+            raise ValueError("zinc_exchange.replacement_probability must be finite and in [0, 1]")
+        if not isinstance(self.smi_path, str) or not self.smi_path.strip():
+            raise ValueError("zinc_exchange.smi_path must be a non-empty path")
+
+    @classmethod
+    def from_config(cls, config: dict[str, Any]) -> ZincExchangeConfig:
+        section = config.get("zinc_exchange", {})
+        if not isinstance(section, dict):
+            raise ValueError("zinc_exchange must be a mapping")
+        unknown = set(section) - {"replacement_probability", "smi_path"}
+        if unknown:
+            raise ValueError(f"Unknown zinc_exchange options: {sorted(unknown)}")
+        defaults = cls()
+        return cls(
+            replacement_probability=float(section.get("replacement_probability", 0.0)),
+            smi_path=section.get("smi_path", defaults.smi_path),
+        )
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "replacement_probability": self.replacement_probability,
+            "smi_path": self.smi_path,
+        }
+
+
+def build_or_load_exchange_index(
+    smi_path: Path,
+    index_path: Path,
+    distributed: bool,
+    rank: int,
+) -> None:
+    """Cache compact line offsets; workers/ranks memory-map the same index."""
+    import json
+
+    stat = smi_path.stat()
+    expected = {
+        "source_path": str(smi_path.resolve()),
+        "size": stat.st_size,
+        "mtime_ns": stat.st_mtime_ns,
+        "format_version": 1,
+    }
+    metadata_path = index_path.with_suffix(".json")
+    if is_main_process(rank):
+        cached = None
+        if index_path.is_file() and metadata_path.is_file():
+            with metadata_path.open(encoding="utf-8") as handle:
+                cached = json.load(handle)
+        if cached != expected:
+            offsets = array("q")
+            first_content_line = True
+            with smi_path.open("rb") as handle:
+                while True:
+                    offset = handle.tell()
+                    line = handle.readline()
+                    if not line:
+                        break
+                    content = line.strip().lstrip(b"\xef\xbb\xbf")
+                    if not content or content.startswith(b"#"):
+                        continue
+                    first_field = content.split(maxsplit=1)[0]
+                    if first_content_line and first_field.lower() == b"smiles":
+                        first_content_line = False
+                        continue
+                    first_content_line = False
+                    offsets.append(offset)
+            if not offsets:
+                raise ValueError(f"No SMILES rows found in exchange source: {smi_path}")
+            index_path.parent.mkdir(parents=True, exist_ok=True)
+            temporary_index = index_path.with_name(index_path.name + f".{os.getpid()}.tmp")
+            with temporary_index.open("wb") as handle:
+                np.save(handle, np.asarray(offsets, dtype=np.int64), allow_pickle=False)
+            os.replace(temporary_index, index_path)
+            temporary_metadata = metadata_path.with_name(metadata_path.name + f".{os.getpid()}.tmp")
+            temporary_metadata.write_text(json.dumps(expected), encoding="utf-8")
+            os.replace(temporary_metadata, metadata_path)
+            print(f"ZINC exchange index saved to {index_path}: {len(offsets):,} rows", flush=True)
+    barrier(distributed)
+
+
+class RandomSmilesSource:
+    """Uniform sampling with replacement over source rows, without protein labels.
+
+    Accepts an optional 'smiles' header and SMILES [whitespace identifier] rows.
+    The source and memory-mapped index are opened separately in each worker.
+    """
+
+    def __init__(
+        self, smi_path: Path, index_path: Path,
+        tokenizer: SmilesTokenizer, max_length: int,
+    ) -> None:
+        self.smi_path = smi_path
+        self.index_path = index_path
+        self.tokenizer = tokenizer
+        self.max_length = max_length
+        self._handle = None
+        self._offsets = None
+        self._pid = None
+        offsets = np.load(index_path, mmap_mode="r", allow_pickle=False)
+        self.row_count = len(offsets)
+        if not self.row_count:
+            raise ValueError(f"Empty exchange index: {index_path}")
+
+    def __getstate__(self) -> dict[str, Any]:
+        state = self.__dict__.copy()
+        state.update(_handle=None, _offsets=None, _pid=None)
+        return state
+
+    def sample_token_ids(self) -> list[int]:
+        if self._pid != os.getpid():
+            if self._handle is not None:
+                self._handle.close()
+            self._handle = self.smi_path.open("rb")
+            self._offsets = np.load(self.index_path, mmap_mode="r", allow_pickle=False)
+            self._pid = os.getpid()
+        for _ in range(100):
+            offset = int(self._offsets[random.randrange(self.row_count)])
+            self._handle.seek(offset)
+            line = self._handle.readline().decode("utf-8-sig").strip()
+            smiles = line.split(maxsplit=1)[0]
+            token_ids = self.tokenizer.encode(smiles, add_bos=True, add_eos=True)
+            # Resample unsupported/overlong rows instead of training truncated molecules.
+            if (
+                3 <= len(token_ids) <= self.max_length
+                and self.tokenizer.unk_token_id not in token_ids
+            ):
+                return token_ids
+        raise ValueError(
+            f"No vocabulary/length-compatible SMILES sampled in 100 attempts from "
+            f"{self.smi_path}; check the source, vocabulary and data.max_length"
+        )
+
+    def __del__(self) -> None:
+        handle = getattr(self, "_handle", None)
+        if handle is not None:
+            handle.close()
 
 
 def load_yaml(path: Path) -> dict[str, Any]:
@@ -415,17 +563,47 @@ class PositiveTargetCollator:
         self,
         pad_token_id: int,
         conditioning_dropout: ConditioningDropoutConfig | None = None,
+        zinc_exchange: ZincExchangeConfig | None = None,
+        zinc_source: RandomSmilesSource | None = None,
     ) -> None:
         self.pad_token_id = pad_token_id
         # None preserves complete conditions for validation/evaluation.
         self.conditioning_dropout = conditioning_dropout
+        self.zinc_exchange = zinc_exchange or ZincExchangeConfig()
+        self.zinc_source = zinc_source
+        if (
+            conditioning_dropout is not None
+            and self.zinc_exchange.replacement_probability > 0.0
+            and zinc_source is None
+        ):
+            raise ValueError("Enabled ZINC exchange requires a SMILES source")
 
     def __call__(
         self,
         batch: list[tuple[list[int], tuple[str, ...]]],
     ) -> dict[str, Any]:
+        # Select conditions and exchange entire molecules BEFORE sizing padding.
+        prepared = []
+        conditioning_modes: list[str] = []
+        zinc_exchanged: list[bool] = []
+        for token_ids, target_ids in batch:
+            mode = "full"
+            if self.conditioning_dropout is not None:
+                target_ids, mode = self.conditioning_dropout.sample(target_ids)
+            exchanged = False
+            if (
+                mode == "unconditional"
+                and self.zinc_exchange.replacement_probability > 0.0
+                and random.random() < self.zinc_exchange.replacement_probability
+            ):
+                token_ids = self.zinc_source.sample_token_ids()
+                exchanged = True
+            prepared.append((token_ids, target_ids))
+            conditioning_modes.append(mode)
+            zinc_exchanged.append(exchanged)
+
         batch_size = len(batch)
-        max_length = max(len(token_ids) for token_ids, _ in batch)
+        max_length = max(len(token_ids) for token_ids, _ in prepared)
         input_ids = torch.full(
             (batch_size, max_length),
             fill_value=self.pad_token_id,
@@ -439,16 +617,10 @@ class PositiveTargetCollator:
         unique_target_ids: list[str] = []
         target_to_index: dict[str, int] = {}
         sample_target_indices: list[list[int]] = []
-        conditioning_modes: list[str] = []
-        for row, (token_ids, target_ids) in enumerate(batch):
+        for row, (token_ids, target_ids) in enumerate(prepared):
             length = len(token_ids)
             input_ids[row, :length] = torch.tensor(token_ids, dtype=torch.long)
             attention_mask[row, :length] = 1
-
-            mode = "full"
-            if self.conditioning_dropout is not None:
-                target_ids, mode = self.conditioning_dropout.sample(target_ids)
-            conditioning_modes.append(mode)
 
             target_indices: list[int] = []
             for target_id in target_ids:
@@ -467,6 +639,7 @@ class PositiveTargetCollator:
             "unique_target_ids": unique_target_ids,
             "sample_target_indices": sample_target_indices,
             "conditioning_modes": conditioning_modes,
+            "zinc_exchanged": zinc_exchanged,
         }
 
 
@@ -477,6 +650,8 @@ def make_dataloader(
     distributed: bool,
     shuffle: bool,
     conditioning_dropout: ConditioningDropoutConfig | None = None,
+    zinc_exchange: ZincExchangeConfig | None = None,
+    zinc_source: RandomSmilesSource | None = None,
 ) -> tuple[DataLoader, DistributedSampler | None]:
     sampler = None
     if distributed:
@@ -494,6 +669,8 @@ def make_dataloader(
         collate_fn=PositiveTargetCollator(
             dataset.tokenizer.pad_token_id,
             conditioning_dropout=conditioning_dropout,
+            zinc_exchange=zinc_exchange,
+            zinc_source=zinc_source,
         ),
         persistent_workers=num_workers > 0,
     )
@@ -845,10 +1022,12 @@ def train_one_epoch(
     last_logged_loss = math.nan
     mode_names = ("full", "single", "unconditional")
     mode_counts = [0, 0, 0]
+    zinc_count = 0
 
     for step, batch in enumerate(loader, start=1):
         for index, mode in enumerate(mode_names):
             mode_counts[index] += batch["conditioning_modes"].count(mode)
+        zinc_count += sum(batch["zinc_exchanged"])
         input_ids = batch["input_ids"].to(device, non_blocking=True)
         attention_mask = batch["attention_mask"].to(device, non_blocking=True)
         labels = batch["labels"].to(device, non_blocking=True)
@@ -960,17 +1139,20 @@ def train_one_epoch(
                 save_state_dict_only=save_state_dict_only,
             )
 
-    totals = torch.tensor(mode_counts, device=device, dtype=torch.long)
+    totals = torch.tensor([*mode_counts, zinc_count], device=device, dtype=torch.long)
     reduce_sum(totals, distributed)
-    sample_count = int(totals.sum().item())
+    sample_count = int(totals[:3].sum().item())
     if is_main_process(rank):
+        logged_counts = dict(zip(mode_names, totals[:3].tolist()))
+        logged_counts["unconditional_mtd"] = int(totals[2] - totals[3])
+        logged_counts["unconditional_zinc"] = int(totals[3])
         summary = ", ".join(
             f"{mode}={int(count)} ({int(count) / max(sample_count, 1):.2%})"
-            for mode, count in zip(mode_names, totals.tolist())
+            for mode, count in logged_counts.items()
         )
         print(f"epoch={epoch} conditioning samples: {summary}", flush=True)
         if writer is not None:
-            for mode, count in zip(mode_names, totals.tolist()):
+            for mode, count in logged_counts.items():
                 writer.add_scalar(f"conditioning/{mode}_count", count, epoch)
                 writer.add_scalar(
                     f"conditioning/{mode}_fraction", count / max(sample_count, 1), epoch
@@ -1071,6 +1253,13 @@ def main() -> int:
     config = load_yaml(config_path)
     conditioning_dropout = ConditioningDropoutConfig.from_config(config)
     config["conditioning_dropout"] = conditioning_dropout.as_dict()
+    zinc_exchange = ZincExchangeConfig.from_config(config)
+    config["zinc_exchange"] = zinc_exchange.as_dict()
+    if (
+        zinc_exchange.replacement_probability > 0.0
+        and conditioning_dropout.unconditional_probability == 0.0
+    ):
+        raise ValueError("ZINC exchange requires conditioning_dropout.unconditional_probability > 0")
     distributed, rank, local_rank, world_size = init_distributed()
     writer: SummaryWriter | None = None
 
@@ -1217,6 +1406,16 @@ def main() -> int:
             raise ValueError("Training and evaluation batch sizes must be positive")
         if num_workers < 0:
             raise ValueError("num_workers must be non-negative")
+        zinc_source = None
+        if zinc_exchange.replacement_probability > 0.0:
+            smi_path = project_path(zinc_exchange.smi_path)
+            if not smi_path.is_file():
+                raise FileNotFoundError(f"ZINC exchange SMILES source not found: {smi_path}")
+            print_main(f"Preparing ZINC exchange source: {smi_path}", rank)
+            exchange_index = output_dir / "splits" / "zinc_exchange_offsets.npy"
+            build_or_load_exchange_index(smi_path, exchange_index, distributed, rank)
+            zinc_source = RandomSmilesSource(smi_path, exchange_index, tokenizer, max_length)
+            print_main(f"ZINC exchange source: {zinc_source.row_count:,} SMILES rows", rank)
         train_loader, train_sampler = make_dataloader(
             train_dataset,
             batch_size=train_batch_size,
@@ -1224,6 +1423,8 @@ def main() -> int:
             distributed=distributed,
             shuffle=True,
             conditioning_dropout=conditioning_dropout,
+            zinc_exchange=zinc_exchange,
+            zinc_source=zinc_source,
         )
         valid_loader, valid_sampler = make_dataloader(
             valid_dataset,
@@ -1333,6 +1534,18 @@ def main() -> int:
             f"single={conditioning_dropout.single_probability:.2%}, "
             f"unconditional={conditioning_dropout.unconditional_probability:.2%}; "
             "validation always uses complete original target sets.",
+            rank,
+        )
+        unconditional = conditioning_dropout.unconditional_probability
+        exchange = zinc_exchange.replacement_probability
+        print_main(
+            f"ZINC exchange probability within fully unconditional samples: {exchange:.2%}; "
+            f"expected fractions of all training samples: "
+            f"full_MTD={conditioning_dropout.full_probability:.2%}, "
+            f"single_MTD={conditioning_dropout.single_probability:.2%}, "
+            f"unconditional_MTD={unconditional * (1.0 - exchange):.2%}, "
+            f"unconditional_ZINC={unconditional * exchange:.2%}. "
+            "Validation never exchanges molecules.",
             rank,
         )
         count = model.smiles_model.config.num_cross_attention_layers
