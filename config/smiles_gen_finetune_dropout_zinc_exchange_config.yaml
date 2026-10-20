@@ -13,7 +13,7 @@ conditioning_dropout:
 # Set to 0.5 with unconditional_probability=0.1 for overall 80/10/5/5%:
 # full MTD / single-target MTD / unconditional MTD / unconditional ZINC.
 zinc_exchange:
-  replacement_probability: 0.0
+  replacement_probability: 0.5
   # Relative to the project root; replace with any other .smi source if needed.
   # An optional "smiles" header and whitespace-separated molecule IDs are accepted.
   smi_path: ZINC_data/zinc_filtered.smi
